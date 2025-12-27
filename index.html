@@ -3,176 +3,142 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>হ জ ব র ল - Gaming Edition</title>
+    <title>হ জ ব র ল - Gaming Pro</title>
     <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
     <style>
-        /* গেমিং ও ট্র্যাডিশনাল ফিউশন থিম */
+        /* গেমিং থিম কনফিগারেশন */
         :root {
             --neon-gold: #FFD700;
             --clay-red: #8B4513;
-            --dark-bg: #1a1a1a;
-            --panel-bg: #2d2d2d;
-            --text-light: #f0f0f0;
+            --dark-bg: #0d0d0d;
+            --panel-bg: #1a1a1a;
+            --neon-glow: 0 0 10px rgba(255, 215, 0, 0.5);
         }
 
-        * { box-sizing: border-box; font-family: 'Segoe UI', Arial, sans-serif; }
+        * { 
+            box-sizing: border-box; 
+            font-family: 'Orbitron', 'Segoe UI', sans-serif; 
+            -webkit-tap-highlight-color: transparent;
+        }
 
         body {
-            margin: 0;
-            padding: 0;
+            margin: 0; padding: 0;
             background-color: var(--dark-bg);
-            color: var(--text-light);
+            color: white;
             height: 100vh;
+            display: flex;
+            justify-content: center;
             overflow: hidden;
-            display: flex;
-            justify-content: center;
-            align-items: center;
         }
 
-        /* ১. ব্লিঙ্কিং অ্যানিমেশন স্ক্রিন (Splash Screen) */
+        /* স্প্ল্যাশ স্ক্রিন */
         #splash-screen {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: var(--dark-bg);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 9999;
+            position: fixed; inset: 0;
+            background: radial-gradient(circle, #222, #000);
+            display: flex; justify-content: center; align-items: center;
+            z-index: 10000;
         }
-
         .blink-text {
-            font-size: 60px;
-            font-weight: bold;
+            font-size: 50px; font-weight: 900;
             color: var(--neon-gold);
-            text-shadow: 0 0 20px var(--neon-gold);
-            animation: blinker 1s linear 3; /* ৩ বার ব্লিঙ্ক করবে */
+            text-shadow: var(--neon-glow);
+            animation: blinker 0.8s linear infinite alternate;
         }
-
-        @keyframes blinker {
-            50% { opacity: 0; transform: scale(1.1); }
-        }
+        @keyframes blinker { from { opacity: 1; } to { opacity: 0.1; } }
 
         /* মেইন কন্টেইনার */
         .app-container {
-            width: 100%;
-            max-width: 500px;
+            width: 100%; max-width: 500px;
             height: 100vh;
             background: var(--panel-bg);
-            display: flex;
-            flex-direction: column;
-            position: relative;
+            display: flex; flex-direction: column;
             border-left: 2px solid var(--clay-red);
             border-right: 2px solid var(--clay-red);
+            position: relative;
         }
 
         header {
-            background: var(--clay-red);
-            padding: 15px;
-            text-align: center;
-            font-size: 22px;
-            font-weight: bold;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-            color: var(--neon-gold);
+            background: linear-gradient(180deg, var(--clay-red), #3d200a);
+            padding: 12px; text-align: center;
+            font-size: 20px; font-weight: bold; color: var(--neon-gold);
+            border-bottom: 2px solid var(--neon-gold);
+            box-shadow: 0 2px 15px rgba(0,0,0,0.8);
         }
 
-        .screen { display: none; flex-direction: column; padding: 20px; height: 100%; }
+        .screen { display: none; flex-direction: column; height: calc(100vh - 50px); padding: 15px; }
         .active { display: flex; }
 
-        /* গেমিং স্টাইল ইনপুট ও বাটন */
+        /* লগইন স্টাইল */
+        .login-box { margin: auto; width: 100%; text-align: center; }
         input {
-            background: #333;
-            border: 1px solid var(--neon-gold);
-            padding: 15px;
-            color: white;
-            margin-bottom: 15px;
-            border-radius: 8px;
-            outline: none;
+            width: 100%; padding: 15px; margin-bottom: 15px;
+            background: #000; border: 1px solid var(--neon-gold);
+            color: var(--neon-gold); border-radius: 5px; outline: none;
+        }
+        .start-btn {
+            width: 100%; padding: 15px; background: var(--neon-gold);
+            color: black; border: none; font-weight: bold;
+            border-radius: 5px; cursor: pointer; box-shadow: var(--neon-glow);
         }
 
-        button {
-            background: linear-gradient(45deg, var(--clay-red), #5d2e0a);
-            color: var(--neon-gold);
-            border: 1px solid var(--neon-gold);
-            padding: 15px;
-            font-weight: bold;
-            border-radius: 8px;
-            cursor: pointer;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        /* ভিডিও এরিয়া */
+        /* ভিডিও গ্রিড */
         .video-wrapper {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-bottom: 10px;
+            display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+            flex-shrink: 0; margin-bottom: 10px;
         }
-
         video {
-            width: 100%;
-            background: #000;
-            border-radius: 12px;
-            border: 2px solid var(--clay-red);
-            aspect-ratio: 3/4;
-            object-fit: cover;
+            width: 100%; aspect-ratio: 1/1; object-fit: cover;
+            background: #000; border: 1px solid var(--clay-red); border-radius: 10px;
         }
 
-        /* চ্যাট এরিয়া */
+        /* চ্যাট বক্স - যা বাকি জায়গা দখল করবে */
         #chat-content {
-            flex: 1;
-            background: rgba(0,0,0,0.3);
-            border-radius: 10px;
+            flex-grow: 1; 
+            background: rgba(0,0,0,0.5);
+            border: 1px solid #333; border-radius: 10px;
+            padding: 10px; overflow-y: auto; margin-bottom: 80px; /* কন্ট্রোলারের জন্য জায়গা রাখা */
+        }
+        .msg { margin-bottom: 5px; font-size: 14px; }
+        .msg-you { color: var(--neon-gold); font-weight: bold; }
+
+        /* ফিক্সড কন্ট্রোল প্যানেল (মোবাইল ফিক্স) */
+        .controls-panel {
+            position: absolute;
+            bottom: 0; left: 0; right: 0;
+            background: #111;
             padding: 10px;
-            overflow-y: auto;
-            margin-bottom: 10px;
-            border: 1px solid #444;
+            display: flex; flex-direction: column;
+            gap: 10px;
+            border-top: 1px solid var(--clay-red);
         }
 
-        .msg { margin-bottom: 8px; font-size: 14px; }
-        .msg-you { color: var(--neon-gold); }
+        .input-row { display: flex; gap: 5px; }
+        .input-row input { margin-bottom: 0; flex: 1; padding: 10px; }
+        .input-row button { width: 50px; padding: 0; }
 
-        /* কন্ট্রোল বাটন (মোবাইল ফিক্সড) */
-        .game-controls {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 8px;
-            padding-top: 10px;
+        .btn-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; }
+        .btn-action { 
+            padding: 12px 5px; font-size: 11px; background: #222; 
+            border: 1px solid #444; color: white; border-radius: 5px;
         }
+        .btn-exit { background: #610000; border-color: red; }
 
-        .btn-small { padding: 10px 5px; font-size: 12px; }
-        .btn-exit { background: #b22222; border-color: #ff4d4d; color: white; }
-
-        .footer-credit {
-            font-size: 10px;
-            text-align: center;
-            padding: 10px;
-            color: #888;
-        }
-
-        /* মোবাইল স্ক্রিন অপ্টিমাইজেশন */
-        @media (max-width: 480px) {
-            header { font-size: 18px; padding: 10px; }
-            .video-wrapper video { aspect-ratio: 1/1; }
-        }
+        .footer-text { font-size: 9px; text-align: center; color: #555; margin-top: 5px; }
     </style>
 </head>
 <body>
 
-<div id="splash-screen">
-    <div class="blink-text">হ জ ব র ল</div>
-</div>
+<div id="splash-screen"><div class="blink-text">হ জ ব র ল</div></div>
 
 <div class="app-container">
-    <header>হ জ ব র ল : গেমিং মোড</header>
+    <header>হ জ ব র ল</header>
 
     <div id="login-screen" class="screen active">
-        <div style="text-align:center; margin-bottom: 30px;">
-            <p style="color:var(--neon-gold)">আপনার পরিচয় ও সিক্রেট কোড দিন</p>
+        <div class="login-box">
+            <input type="text" id="username" placeholder="আপনার ডাকনাম">
+            <input type="text" id="room-id" placeholder="সিক্রেট রুম কোড">
+            <button class="start-btn" onclick="joinRoom()">যুদ্ধে প্রবেশ করুন</button>
         </div>
-        <input type="text" id="username" placeholder="আপনার নাম...">
-        <input type="text" id="room-id" placeholder="সিক্রেট রুম কোড...">
-        <button onclick="joinRoom()">যুদ্ধে প্রবেশ করুন</button>
     </div>
 
     <div id="main-screen" class="screen">
@@ -180,35 +146,32 @@
             <video id="local-video" autoplay muted playsinline></video>
             <video id="remote-video" autoplay playsinline></video>
         </div>
-        
+
         <div id="chat-content"></div>
-        
-        <div style="display:flex; gap:5px; margin-bottom: 10px;">
-            <input type="text" id="msg-input" placeholder="বার্তা লিখুন..." style="flex:1; margin:0; padding:10px;">
-            <button onclick="sendMessage()" style="padding:10px 20px;">➔</button>
-        </div>
 
-        <div class="game-controls">
-            <button class="btn-small" onclick="toggleMic()" id="mic-btn">🎙 মাইক অন</button>
-            <button class="btn-small" onclick="toggleVideo()" id="cam-btn">📷 ক্যামেরা অন</button>
-            <button class="btn-small btn-exit" onclick="exitRoom()">লিভ রুম</button>
-        </div>
-
-        <div class="footer-credit">
-            © ২০২৪ - প্রোজেক্ট নির্মাতা: বাবাই
+        <div class="controls-panel">
+            <div class="input-row">
+                <input type="text" id="msg-input" placeholder="বার্তা লিখুন...">
+                <button class="start-btn" onclick="sendMessage()">➔</button>
+            </div>
+            <div class="btn-row">
+                <button class="btn-action" onclick="toggleMic()" id="mic-btn">🎙 মাইক অন</button>
+                <button class="btn-action" onclick="toggleVideo()" id="cam-btn">📷 ক্যামেরা অন</button>
+                <button class="btn-action btn-exit" onclick="exitRoom()">লিভ রুম</button>
+            </div>
+            <div class="footer-text">© ২০২৪ - প্রোজেক্ট নির্মাতা: বাবাই</div>
         </div>
     </div>
 </div>
 
 <script>
-    // ১. স্প্ল্যাশ স্ক্রিন হ্যান্ডলার
+    // স্প্ল্যাশ স্ক্রিন রিমুভ
     window.onload = () => {
         setTimeout(() => {
             const splash = document.getElementById('splash-screen');
-            splash.style.transition = "opacity 0.5s";
-            splash.style.opacity = "0";
+            splash.style.opacity = '0';
             setTimeout(() => splash.remove(), 500);
-        }, 3000); // ৩ সেকেন্ড পর আসল পেজ আসবে
+        }, 3000);
     };
 
     let peer, localStream, conn;
@@ -216,22 +179,20 @@
     function joinRoom() {
         const name = document.getElementById('username').value;
         const room = document.getElementById('room-id').value;
-
-        if (!name || !room) return alert("সব তথ্য পূরণ করুন!");
+        if (!name || !room) return alert("সব তথ্য দিন!");
 
         peer = new Peer(room);
 
         peer.on('open', (id) => {
-            switchToMain();
+            document.getElementById('login-screen').classList.remove('active');
+            document.getElementById('main-screen').classList.add('active');
             startMedia();
         });
 
         peer.on('error', (err) => {
             if(err.type === 'unavailable-id') connectAsGuest(room);
-            else alert("Error: " + err.type);
         });
 
-        // কল রিসিভ করা
         peer.on('call', call => {
             call.answer(localStream);
             call.on('stream', stream => {
@@ -239,10 +200,9 @@
             });
         });
 
-        // চ্যাট রিসিভ করা
         peer.on('connection', c => {
             conn = c;
-            setupChat();
+            conn.on('data', data => appendMsg("অন্যজন: " + data, false));
         });
     }
 
@@ -250,14 +210,15 @@
         const guestId = 'guest-' + Math.floor(Math.random()*1000);
         peer = new Peer(guestId);
         peer.on('open', () => {
-            switchToMain();
+            document.getElementById('login-screen').classList.remove('active');
+            document.getElementById('main-screen').classList.add('active');
             startMedia().then(() => {
                 const call = peer.call(id, localStream);
                 call.on('stream', stream => {
                     document.getElementById('remote-video').srcObject = stream;
                 });
                 conn = peer.connect(id);
-                setupChat();
+                conn.on('data', data => appendMsg("অন্যজন: " + data, false));
             });
         });
     }
@@ -266,20 +227,7 @@
         try {
             localStream = await navigator.mediaDevices.getUserMedia({video: true, audio: true});
             document.getElementById('local-video').srcObject = localStream;
-        } catch(e) {
-            console.log("Media Error");
-        }
-    }
-
-    function switchToMain() {
-        document.getElementById('login-screen').classList.remove('active');
-        document.getElementById('main-screen').classList.add('active');
-    }
-
-    function setupChat() {
-        conn.on('data', data => {
-            appendMsg("অন্যজন: " + data, false);
-        });
+        } catch(e) { console.log("Media Error"); }
     }
 
     function sendMessage() {
@@ -300,7 +248,6 @@
         box.scrollTop = box.scrollHeight;
     }
 
-    // বাটন কন্ট্রোল
     function toggleMic() {
         const audio = localStream.getAudioTracks()[0];
         audio.enabled = !audio.enabled;
@@ -310,13 +257,11 @@
     function toggleVideo() {
         const video = localStream.getVideoTracks()[0];
         video.enabled = !video.enabled;
-        document.getElementById('cam-btn').innerText = video.enabled ? "📷 ক্যামেরা অন" : "🚫 ক্যামেরা অফ";
+        document.getElementById('cam-btn').innerText = video.enabled ? "📷 ক্যামেরা অন" : "🚫 অফ";
     }
 
     function exitRoom() {
-        if(confirm("আপনি কি রুম থেকে বের হতে চান?")) {
-            location.reload();
-        }
+        if(confirm("আপনি কি লিভ করতে চান?")) location.reload();
     }
 </script>
 
