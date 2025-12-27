@@ -3,16 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>হ জ ব র ল - WhatsApp Style</title>
+    <title>হ জ ব র ল - WhatsApp Pro</title>
     <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
     <style>
         :root {
             --whatsapp-green: #25D366;
+            --whatsapp-dark: #075E54;
             --whatsapp-red: #FF3B30;
-            --dark-overlay: rgba(0, 0, 0, 0.6);
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Helvetica, sans-serif; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
 
         body {
             background-color: #000;
@@ -30,28 +30,34 @@
             height: 100vh;
             position: relative;
             background: #111;
-            display: flex;
-            flex-direction: column;
         }
 
-        /* লগইন স্ক্রিন */
+        /* স্প্ল্যাশ স্ক্রিন */
+        #splash {
+            position: fixed; inset: 0; background: var(--whatsapp-dark);
+            display: flex; justify-content: center; align-items: center; z-index: 1000;
+        }
+
+        /* স্ক্রিন ম্যানেজমেন্ট */
         .screen { display: none; height: 100%; width: 100%; flex-direction: column; }
         .active { display: flex; }
 
+        /* লগইন ডিজাইন */
         #login-screen {
             justify-content: center;
             align-items: center;
             padding: 20px;
-            background: #075E54;
+            background: var(--whatsapp-dark);
         }
 
         .login-card {
-            width: 100%;
-            text-align: center;
+            width: 90%;
             background: white;
-            padding: 30px;
-            border-radius: 15px;
+            padding: 25px;
+            border-radius: 20px;
             color: #333;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            text-align: center;
         }
 
         input {
@@ -59,74 +65,73 @@
             padding: 12px;
             margin: 10px 0;
             border: 1px solid #ddd;
-            border-radius: 8px;
+            border-radius: 10px;
             font-size: 16px;
+            outline: none;
         }
 
         .btn-join {
             width: 100%;
-            padding: 12px;
+            padding: 14px;
             background: var(--whatsapp-green);
             color: white;
             border: none;
-            border-radius: 8px;
+            border-radius: 10px;
             font-weight: bold;
+            font-size: 16px;
             cursor: pointer;
+            margin-top: 10px;
         }
 
-        /* ভিডিও কল স্ক্রিন (WhatsApp Layout) */
-        #main-screen {
-            position: relative;
-            background: #000;
-        }
+        /* ভিডিও কল লেআউট (WhatsApp Style) */
+        #main-screen { position: relative; background: #000; }
 
-        .video-container {
-            position: absolute;
-            inset: 0;
-            display: flex;
-            flex-direction: column;
-        }
-
-        /* রিমোট ভিডিও - পুরো স্ক্রিন */
         #remote-video {
             width: 100%;
             height: 100%;
             object-fit: cover;
-            background: #222;
+            background: #111;
         }
 
-        /* লোকাল ভিডিও - ছোট পপআপ (হোয়াটসঅ্যাপের মতো) */
         #local-video {
             position: absolute;
             top: 20px;
             right: 20px;
             width: 100px;
-            height: 150px;
-            border-radius: 10px;
-            border: 2px solid white;
+            height: 140px;
+            border-radius: 12px;
+            border: 2px solid rgba(255,255,255,0.5);
             object-fit: cover;
             z-index: 10;
             background: #000;
         }
 
-        /* চ্যাট ওভারলে (ভাসমান) */
+        /* চ্যাট মেসেজ ওভারলে */
         #chat-content {
             position: absolute;
-            bottom: 140px;
-            left: 10px;
-            right: 10px;
-            max-height: 150px;
+            bottom: 150px;
+            left: 15px;
+            right: 15px;
+            max-height: 120px;
             overflow-y: auto;
-            background: rgba(0,0,0,0.4);
-            padding: 10px;
-            border-radius: 10px;
-            font-size: 13px;
             z-index: 5;
-            pointer-events: none; /* চ্যাট থাকলেও বাটন ক্লিক করা যাবে */
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            pointer-events: none;
         }
-        .msg { margin-bottom: 4px; text-shadow: 1px 1px 2px black; }
 
-        /* কন্ট্রোল প্যানেল (হোয়াটসঅ্যাপ স্টাইল ভাসমান বাটন) */
+        .msg {
+            background: rgba(0,0,0,0.5);
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 13px;
+            width: fit-content;
+            max-width: 80%;
+            text-shadow: 1px 1px 2px black;
+        }
+
+        /* কন্ট্রোল প্যানেল */
         .controls-layer {
             position: absolute;
             bottom: 30px;
@@ -139,32 +144,46 @@
             z-index: 20;
         }
 
-        .msg-input-row {
+        .input-box {
             display: flex;
             width: 90%;
-            gap: 8px;
+            gap: 10px;
+            background: rgba(0,0,0,0.4);
+            padding: 5px;
+            border-radius: 30px;
+            backdrop-filter: blur(10px);
         }
 
-        .msg-input-row input {
+        .input-box input {
             flex: 1;
-            background: rgba(255,255,255,0.2);
-            border: 1px solid rgba(255,255,255,0.3);
+            background: transparent;
+            border: none;
             color: white;
-            padding: 10px;
+            padding: 8px 15px;
             margin: 0;
-            border-radius: 20px;
+            font-size: 14px;
         }
 
-        .action-buttons {
+        .send-btn {
+            background: var(--whatsapp-green);
+            border: none;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            color: white;
+            cursor: pointer;
+        }
+
+        .action-row {
             display: flex;
             gap: 20px;
-            background: var(--dark-overlay);
-            padding: 15px 30px;
+            background: rgba(255,255,255,0.1);
+            padding: 12px 25px;
             border-radius: 40px;
-            backdrop-filter: blur(5px);
+            backdrop-filter: blur(15px);
         }
 
-        .btn-circle {
+        .btn-round {
             width: 50px;
             height: 50px;
             border-radius: 50%;
@@ -173,40 +192,38 @@
             justify-content: center;
             align-items: center;
             cursor: pointer;
-            font-size: 18px;
+            font-size: 20px;
             background: rgba(255,255,255,0.2);
             color: white;
+            transition: 0.3s;
         }
 
-        .btn-hangup {
-            background: var(--whatsapp-red);
-        }
-
-        .btn-active {
+        .btn-round.off {
             background: white;
             color: black;
         }
 
-        /* স্প্ল্যাশ স্ক্রিন */
-        #splash {
-            position: fixed; inset: 0; background: #075E54;
-            display: flex; justify-content: center; align-items: center; z-index: 1000;
+        .btn-end {
+            background: var(--whatsapp-red);
         }
+
+        .footer-tag { font-size: 10px; color: rgba(255,255,255,0.5); text-align: center; }
     </style>
 </head>
 <body>
 
 <div id="splash">
-    <h1 style="color: white; font-size: 40px;">হ জ ব র ল</h1>
+    <h1 style="color: white; font-size: 35px; letter-spacing: 2px;">হ জ ব র ল</h1>
 </div>
 
 <div class="app-container">
     <div id="login-screen" class="screen active">
         <div class="login-card">
-            <h2 style="margin-bottom: 10px; color: #075E54;">ভিডিও কল</h2>
+            <h2 style="color: var(--whatsapp-dark); margin-bottom: 15px;">ভিডিও কল</h2>
             <input type="text" id="username" placeholder="আপনার নাম">
-            <input type="text" id="room-id" placeholder="রুম কোড (যেমন: 1234)">
-            <button class="btn-join" onclick="initCall()">কল করুন</button>
+            <input type="text" id="room-id" placeholder="সিক্রেট রুম কোড">
+            <button class="btn-join" onclick="joinRoom()">কল শুরু করুন</button>
+            <p style="font-size: 12px; margin-top: 15px; color: #777;">একই কোড ব্যবহার করে বন্ধুরা যুক্ত হন</p>
         </div>
     </div>
 
@@ -217,46 +234,62 @@
         <div id="chat-content"></div>
 
         <div class="controls-layer">
-            <div class="msg-input-row">
+            <div class="input-box">
                 <input type="text" id="msg-input" placeholder="মেসেজ লিখুন...">
-                <button onclick="sendMsg()" style="background:var(--whatsapp-green); border:none; border-radius:50%; width:40px; color:white;">➔</button>
+                <button class="send-btn" onclick="sendMessage()">➔</button>
             </div>
 
-            <div class="action-buttons">
-                <button class="btn-circle" onclick="toggleMic()" id="mic-btn">🎙</button>
-                <button class="btn-circle" onclick="toggleCam()" id="cam-btn">📷</button>
-                <button class="btn-circle btn-hangup" onclick="endCall()">📞</button>
+            <div class="action-row">
+                <button class="btn-round" onclick="toggleMic()" id="mic-btn">🎙️</button>
+                <button class="btn-round" onclick="toggleVideo()" id="cam-btn">📷</button>
+                <button class="btn-round btn-end" onclick="exitRoom()">📞</button>
             </div>
-            <div style="font-size: 10px; color: #ccc;">নির্মাতা: বাবাই</div>
+            <div class="footer-tag">নির্মাতা: বাবাই | © ২০২৫</div>
         </div>
     </div>
 </div>
 
 <script>
-    setTimeout(() => { document.getElementById('splash').remove(); }, 2000);
+    // স্প্ল্যাশ স্ক্রিন হ্যান্ডলার
+    window.onload = () => {
+        setTimeout(() => {
+            const splash = document.getElementById('splash');
+            splash.style.opacity = '0';
+            setTimeout(() => splash.remove(), 500);
+        }, 2000);
+    };
 
     let peer, localStream, conn;
 
-    async function initCall() {
+    async function joinRoom() {
         const name = document.getElementById('username').value;
         const room = document.getElementById('room-id').value;
-        if (!name || !room) return alert("তথ্য সঠিক দিন");
+
+        if (!name || !room) return alert("দয়া করে নাম এবং রুম কোড দিন!");
 
         try {
+            // মিডিয়া পারমিশন আগে নেওয়া হচ্ছে
             localStream = await navigator.mediaDevices.getUserMedia({video: true, audio: true});
             document.getElementById('local-video').srcObject = localStream;
 
+            // Peer কানেকশন তৈরি করা হচ্ছে
             peer = new Peer(room);
 
-            peer.on('open', () => {
-                document.getElementById('login-screen').classList.remove('active');
-                document.getElementById('main-screen').classList.add('active');
+            peer.on('open', (id) => {
+                console.log('Connected with ID: ' + id);
+                switchToMain();
             });
 
             peer.on('error', (err) => {
-                if(err.type === 'unavailable-id') connectAsGuest(room);
+                if(err.type === 'unavailable-id') {
+                    // যদি আইডি আগে থেকেই থাকে, তবে গেস্ট হিসেবে জয়েন করা
+                    connectAsGuest(room);
+                } else {
+                    alert("Error: " + err.type);
+                }
             });
 
+            // ইনকামিং কল হ্যান্ডলিং
             peer.on('call', call => {
                 call.answer(localStream);
                 call.on('stream', stream => {
@@ -264,60 +297,79 @@
                 });
             });
 
+            // ইনকামিং মেসেজ কানেকশন হ্যান্ডলিং
             peer.on('connection', c => {
                 conn = c;
-                conn.on('data', data => showMsg("অন্যজন: " + data));
+                setupChat();
             });
 
-        } catch(e) { alert("ক্যামেরা পারমিশন দিন"); }
+        } catch(e) {
+            alert("ক্যামেরা এবং মাইক পারমিশন প্রয়োজন!");
+        }
     }
 
     function connectAsGuest(id) {
-        peer = new Peer();
+        const guestId = 'guest-' + Math.floor(Math.random()*1000);
+        peer = new Peer(guestId);
+        
         peer.on('open', () => {
-            document.getElementById('login-screen').classList.remove('active');
-            document.getElementById('main-screen').classList.add('active');
+            switchToMain();
+            // হোস্টকে কল করা
             const call = peer.call(id, localStream);
             call.on('stream', stream => {
                 document.getElementById('remote-video').srcObject = stream;
             });
+            // হোস্টের সাথে চ্যাট কানেকশন
             conn = peer.connect(id);
-            conn.on('data', data => showMsg("অন্যজন: " + data));
+            setupChat();
         });
     }
 
-    function sendMsg() {
+    function setupChat() {
+        conn.on('data', data => {
+            appendMsg("অন্যজন: " + data);
+        });
+    }
+
+    function sendMessage() {
         const inp = document.getElementById('msg-input');
         if(conn && inp.value) {
             conn.send(inp.value);
-            showMsg("আপনি: " + inp.value);
+            appendMsg("আপনি: " + inp.value);
             inp.value = "";
         }
     }
 
-    function showMsg(text) {
+    function appendMsg(txt) {
         const div = document.createElement('div');
         div.className = "msg";
-        div.innerText = text;
+        div.innerText = txt;
         const box = document.getElementById('chat-content');
         box.appendChild(div);
         box.scrollTop = box.scrollHeight;
     }
 
+    function switchToMain() {
+        document.getElementById('login-screen').classList.remove('active');
+        document.getElementById('main-screen').classList.add('active');
+    }
+
     function toggleMic() {
-        const t = localStream.getAudioTracks()[0];
-        t.enabled = !t.enabled;
-        document.getElementById('mic-btn').classList.toggle('btn-active');
+        const audio = localStream.getAudioTracks()[0];
+        audio.enabled = !audio.enabled;
+        document.getElementById('mic-btn').classList.toggle('off', !audio.enabled);
     }
 
-    function toggleCam() {
-        const t = localStream.getVideoTracks()[0];
-        t.enabled = !t.enabled;
-        document.getElementById('cam-btn').classList.toggle('btn-active');
+    function toggleVideo() {
+        const video = localStream.getVideoTracks()[0];
+        video.enabled = !video.enabled;
+        document.getElementById('cam-btn').classList.toggle('off', !video.enabled);
     }
 
-    function endCall() {
-        if(confirm("কল শেষ করবেন?")) location.reload();
+    function exitRoom() {
+        if(confirm("আপনি কি কল শেষ করতে চান?")) {
+            location.reload();
+        }
     }
 </script>
 
