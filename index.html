@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>হ জ ব র ল | Multi-user Video Chat</title>
+<title>হ জ ব র ল | Auto Video Chat</title>
 <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
@@ -18,18 +18,18 @@ button.secondary{background:linear-gradient(90deg,#0077ff,#00e0ff)}
 button.danger{background:#ff0033}
 .chat{height:200px;overflow-y:auto;background:#0f0f18;border-radius:10px;padding:10px;margin-bottom:10px}
 video{width:100%;max-height:220px;background:#000;border-radius:12px;margin-top:10px}
+video.multi{width:49%;margin:0.5%}
 .controls{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
-@media(max-width:600px){.controls{flex-direction:column}}
+@media(max-width:600px){.controls{flex-direction:column} video.multi{width:100%;margin:5px 0}}
 footer{text-align:center;font-size:12px;opacity:.6;padding:10px}
 </style>
 </head>
 <body>
 
-<header>হ জ ব র ল | Multi-user Video Chat</header>
+<header>হ জ ব র ল | Auto Video Chat</header>
 
 <div class="container">
 
-<!-- LOGIN CARD -->
 <div class="card" id="login">
 <input id="username" placeholder="আপনার নাম">
 <input id="roomCode" placeholder="সিক্রেট কোড">
@@ -37,17 +37,15 @@ footer{text-align:center;font-size:12px;opacity:.6;padding:10px}
 <button class="secondary" id="joinBtn">রুমে জয়েন করুন</button>
 </div>
 
-<!-- CHAT CARD -->
 <div class="card" id="chatCard" style="display:none">
 <div class="chat" id="chat"></div>
 <input id="msg" placeholder="বার্তা লিখুন">
 <button id="sendBtn">পাঠান</button>
 </div>
 
-<!-- VIDEO CARD -->
 <div class="card" id="callCard" style="display:none">
 <video id="myVideo" autoplay muted playsinline></video>
-<video id="remoteVideo" autoplay playsinline></video>
+<div id="remoteVideos" style="display:flex;flex-wrap:wrap"></div>
 <div class="controls">
 <button id="micBtn">মাইক</button>
 <button id="camBtn">ক্যামেরা</button>
@@ -60,10 +58,10 @@ footer{text-align:center;font-size:12px;opacity:.6;padding:10px}
 <footer>© 2025 হ জ ব র ল | বাবাই</footer>
 
 <script>
-let peer, conn, call;
+let peer, conn;
 let localStream;
-let myName="", peerName="";
-let isHost=false;
+let myName = "";
+let peers = {}; // store all call objects
 
 /* Utility */
 function log(t){
@@ -84,19 +82,9 @@ async function initMedia(){
 
 /* Enter UI */
 function enterUI(){
-  login.style.display="none";
-  chatCard.style.display="block";
-  callCard.style.display="block";
-}
-
-/* Setup Connection */
-function setupConn(){
-  if(!conn) return;
-  conn.on("data", d => log(`<b>${d.name}:</b> ${d.msg}`));
-  conn.on("close", ()=>{
-    alert(peerName+" রুম ছেড়ে গেছে");
-    log("🔴 "+peerName+" রুম ছেড়ে গেছে");
-  });
+  login.style.display = "none";
+  chatCard.style.display = "block";
+  callCard.style.display = "block";
 }
 
 /* Chat Send */
@@ -107,11 +95,30 @@ function sendMsg(){
   msg.value="";
 }
 
-/* Buttons */
+/* Add remote video */
+function addRemoteVideo(stream, id){
+  if(peers[id]) return; // already exists
+  const video = document.createElement('video');
+  video.srcObject = stream;
+  video.autoplay = true;
+  video.playsInline = true;
+  video.className = "multi";
+  video.id = "vid_"+id;
+  remoteVideos.appendChild(video);
+  peers[id] = video;
+}
+
+/* Remove remote video */
+function removeRemoteVideo(id){
+  const v = document.getElementById("vid_"+id);
+  if(v) v.remove();
+  delete peers[id];
+}
+
+/* Create Room */
 document.getElementById("createBtn").onclick = async ()=>{
   if(!username.value || !roomCode.value){ alert("নাম ও কোড দিন"); return; }
   myName = username.value;
-  isHost = true;
   await initMedia();
 
   peer = new Peer(roomCode.value,{
@@ -126,24 +133,23 @@ document.getElementById("createBtn").onclick = async ()=>{
 
   peer.on("open", ()=>{ enterUI(); log("🟢 রুম তৈরি হয়েছে"); });
 
+  // Accept connections
   peer.on("connection", c=>{
     conn = c;
-    peerName = c.metadata?.name || "একজন ইউজার";
-    alert(peerName+" রুমে জয়েন করেছে");
-    log("🟡 "+peerName+" রুমে জয়েন করেছে");
+    log("🟡 "+c.metadata.name+" জয়েন করেছে");
+    alert(c.metadata.name+" রুমে জয়েন করেছে");
     setupConn();
-    // Auto call
-    call = peer.call(conn.peer, localStream);
-    call.on("stream", s=>remoteVideo.srcObject = s);
   });
 
+  // Auto call all peers
   peer.on("call", c=>{
-    call = c;
     c.answer(localStream);
-    c.on("stream", s=>remoteVideo.srcObject = s);
+    c.on("stream", s=>addRemoteVideo(s, c.peer));
+    c.on("close", ()=>removeRemoteVideo(c.peer));
   });
 };
 
+/* Join Room */
 document.getElementById("joinBtn").onclick = async ()=>{
   if(!username.value || !roomCode.value){ alert("নাম ও কোড দিন"); return; }
   myName = username.value;
@@ -161,23 +167,39 @@ document.getElementById("joinBtn").onclick = async ()=>{
 
   peer.on("open", ()=>{
     conn = peer.connect(roomCode.value,{metadata:{name:myName}});
-    conn.on("open", ()=>{ enterUI(); log("🟢 রুমে জয়েন করা হয়েছে"); });
+    conn.on("open", ()=>{
+      enterUI();
+      log("🟢 রুমে জয়েন করা হয়েছে");
+      // Auto call host
+      const c = peer.call(roomCode.value, localStream);
+      c.on("stream", s=>addRemoteVideo(s, c.peer));
+      c.on("close", ()=>removeRemoteVideo(c.peer));
+    });
     setupConn();
   });
 
   peer.on("call", c=>{
-    call = c;
     c.answer(localStream);
-    c.on("stream", s=>remoteVideo.srcObject = s);
+    c.on("stream", s=>addRemoteVideo(s, c.peer));
+    c.on("close", ()=>removeRemoteVideo(c.peer));
   });
 };
 
-/* Control Buttons */
+/* Setup Chat */
+function setupConn(){
+  if(!conn) return;
+  conn.on("data", d=>log(`<b>${d.name}:</b> ${d.msg}`));
+  conn.on("close", ()=>{
+    alert(conn.metadata?.name+" রুম ছেড়ে গেছে");
+  });
+}
+
+/* Buttons */
 document.getElementById("sendBtn").onclick = sendMsg;
 document.getElementById("micBtn").onclick = ()=>{ if(localStream)localStream.getAudioTracks()[0].enabled^=1; };
 document.getElementById("camBtn").onclick = ()=>{ if(localStream)localStream.getVideoTracks()[0].enabled^=1; };
 document.getElementById("leaveBtn").onclick = ()=>{
-  if(call) call.close();
+  Object.keys(peers).forEach(id=>removeRemoteVideo(id));
   if(conn) conn.close();
   if(peer) peer.destroy();
   location.reload();
