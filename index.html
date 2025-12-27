@@ -3,207 +3,154 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>হ য ব র ল - Moto HD Edition</title>
+    <title>হ য ব র ল - Moto HD</title>
     <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
     <style>
-        /* ব্র্যান্ড কালার কনফিগারেশন */
         :root {
-            --brand-primary: #075E54; /* Moto HD / WhatsApp Teal */
-            --brand-secondary: #128C7E;
-            --bg-color: #e5ddd5;
-            --chat-self: #dcf8c6;
-            --chat-other: #ffffff;
+            --wa-teal: #075E54;
+            --wa-green: #25D366;
+            --wa-bg: #e5ddd5;
         }
 
-        * { 
-            box-sizing: border-box; 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            -webkit-tap-highlight-color: transparent;
-        }
+        * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
 
-        body {
-            margin: 0; padding: 0;
-            background-color: #d1d7db;
-            display: flex; justify-content: center;
-            height: 100vh; overflow: hidden;
-        }
+        body { margin: 0; background-color: #d1d7db; display: flex; justify-content: center; height: 100vh; overflow: hidden; }
 
         /* স্প্ল্যাশ স্ক্রিন */
         #splash-screen {
-            position: fixed; inset: 0;
-            background: #ffffff;
+            position: fixed; inset: 0; background: white;
             display: flex; flex-direction: column; justify-content: center; align-items: center;
-            z-index: 10000;
-            transition: opacity 0.5s ease-out;
+            z-index: 10000; transition: opacity 0.5s;
         }
-        .splash-logo {
-            width: 80px; height: 80px;
-            background: var(--brand-primary);
-            color: white; border-radius: 20px;
-            display: flex; justify-content: center; align-items: center;
-            font-size: 40px; font-weight: bold;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-        }
-        .splash-text { margin-top: 15px; font-size: 24px; color: #555; font-weight: bold; }
 
-        /* মেইন কন্টেইনার */
         .app-container {
-            width: 100%; max-width: 500px;
-            height: 100vh;
-            background: var(--bg-color);
-            display: flex; flex-direction: column;
-            position: relative;
+            width: 100%; max-width: 500px; height: 100vh;
+            background: var(--wa-bg); display: flex; flex-direction: column; position: relative;
         }
 
         header {
-            background: var(--brand-primary);
-            padding: 10px 15px;
-            display: flex; align-items: center;
-            color: white;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            z-index: 10;
+            background: var(--wa-teal); padding: 15px; color: white;
+            display: flex; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); z-index: 10;
         }
-
-        .header-logo {
-            width: 40px; height: 40px;
-            background: rgba(255,255,255,0.2);
-            border-radius: 50%; display: flex;
-            justify-content: center; align-items: center;
-            font-weight: bold; font-size: 20px;
-        }
-
-        .header-info { flex-grow: 1; margin-left: 12px; }
-        .header-info h4 { margin: 0; font-size: 18px; }
-        .header-info span { font-size: 12px; opacity: 0.8; }
 
         .screen { display: none; flex-direction: column; height: calc(100vh - 60px); }
         .active { display: flex; }
 
-        /* লগইন ডিজাইন */
-        .login-box { margin: auto; width: 85%; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center; }
-        input {
-            width: 100%; padding: 12px; margin-bottom: 15px;
-            border: 1px solid #ddd; border-radius: 8px; outline: none; font-size: 16px;
-        }
-        .start-btn {
-            width: 100%; padding: 12px; background: #25D366;
-            color: white; border: none; font-weight: bold;
-            border-radius: 8px; cursor: pointer; font-size: 16px;
-        }
+        /* লগইন বক্স */
+        .login-box { margin: auto; width: 85%; background: white; padding: 25px; border-radius: 10px; text-align: center; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        input { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 5px; outline: none; }
+        .start-btn { width: 100%; padding: 12px; background: var(--wa-green); color: white; border: none; font-weight: bold; border-radius: 5px; cursor: pointer; }
 
         /* ভিডিও এরিয়া */
-        .video-wrapper {
-            display: grid; grid-template-columns: 1fr 1fr; gap: 5px;
-            padding: 10px; background: #000;
-        }
-        video {
-            width: 100%; aspect-ratio: 1/1; object-fit: cover;
-            border-radius: 10px; background: #222;
-        }
+        .video-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; padding: 10px; background: #000; }
+        video { width: 100%; aspect-ratio: 1/1; object-fit: cover; border-radius: 8px; background: #222; }
 
-        /* চ্যাট বাবল ডিজাইন */
+        /* চ্যাট এরিয়া */
         #chat-content {
-            flex-grow: 1; padding: 15px; overflow-y: auto;
-            display: flex; flex-direction: column;
+            flex-grow: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column;
             background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png');
         }
-        .msg { 
-            max-width: 80%; margin-bottom: 8px; padding: 8px 12px; 
-            border-radius: 10px; font-size: 14px; position: relative;
-            box-shadow: 0 1px 1px rgba(0,0,0,0.1);
-        }
-        .msg-you { align-self: flex-end; background: var(--chat-self); color: #000; }
-        .msg-them { align-self: flex-start; background: var(--chat-other); color: #000; }
+        .msg { max-width: 80%; margin-bottom: 8px; padding: 8px 12px; border-radius: 10px; font-size: 14px; box-shadow: 0 1px 1px rgba(0,0,0,0.1); }
+        .msg-you { align-self: flex-end; background: #dcf8c6; }
+        .msg-them { align-self: flex-start; background: #ffffff; }
 
-        /* কন্ট্রোল প্যানেল */
-        .controls {
-            padding: 10px; background: #f0f0f0;
-            display: flex; flex-direction: column; gap: 10px;
+        /* কল কন্ট্রোল প্যানেল (গুরুত্বপূর্ণ) */
+        .call-controls {
+            background: #f0f0f0; padding: 15px; border-top: 1px solid #ddd;
         }
-        .input-row { display: flex; gap: 8px; }
-        .input-row input { margin-bottom: 0; border-radius: 20px; border: none; padding: 10px 15px; flex: 1; }
-        .send-btn { 
-            width: 45px; height: 45px; background: var(--brand-primary); 
-            border: none; border-radius: 50%; color: white; cursor: pointer;
+        
+        .message-input-row { display: flex; gap: 8px; margin-bottom: 15px; }
+        .message-input-row input { margin: 0; border-radius: 25px; border: none; padding: 12px 20px; }
+        .send-btn { width: 45px; height: 45px; background: var(--wa-teal); border: none; border-radius: 50%; color: white; cursor: pointer; }
+
+        .action-buttons-row {
+            display: flex; justify-content: space-between; align-items: center;
         }
 
-        .btn-row { display: flex; justify-content: space-around; padding: 5px 0; }
-        .action-btn { 
-            background: none; border: none; font-size: 11px; color: #555;
-            display: flex; flex-direction: column; align-items: center; gap: 4px;
+        .control-btn {
+            flex: 1; margin: 0 5px; padding: 12px 5px; border: none; border-radius: 8px;
+            font-size: 13px; font-weight: bold; cursor: pointer; color: white;
+            display: flex; flex-direction: column; align-items: center; gap: 5px;
         }
-        .btn-exit { color: #d32f2f; }
+
+        .btn-mic { background-color: #4f5b62; }
+        .btn-cam { background-color: #4f5b62; }
+        .btn-hangup { background-color: #ea0038; } /* লিভ বাটন লাল রঙের */
+
+        .off { background-color: #ff9800 !important; } /* অফ থাকলে কালার চেঞ্জ হবে */
+
     </style>
 </head>
 <body>
 
 <div id="splash-screen">
-    <div class="splash-logo">হ</div>
-    <div class="splash-text">হ য ব র ল</div>
-    <div style="position: absolute; bottom: 50px; color: #888; font-size: 12px;">Moto HD Technology</div>
+    <div style="font-size: 50px; background: var(--wa-teal); color: white; width: 80px; height: 80px; display: flex; justify-content: center; align-items: center; border-radius: 20px;">হ</div>
+    <h2 style="color: #555;">হ য ব র ল</h2>
 </div>
 
 <div class="app-container">
     <header>
-        <div class="header-logo">হ</div>
-        <div class="header-info">
-            <h4 id="display-name">হ য ব র ল</h4>
-            <span id="status">অনলাইন</span>
-        </div>
+        <div style="font-weight: bold; font-size: 20px;">হ য ব র ল</div>
     </header>
 
     <div id="login-screen" class="screen active">
         <div class="login-box">
-            <h2 style="color: var(--brand-primary); margin-top: 0;">লগইন করুন</h2>
+            <h3>Moto HD কানেকশন</h3>
             <input type="text" id="username" placeholder="আপনার নাম">
-            <input type="text" id="room-id" placeholder="রুম আইডি">
-            <button class="start-btn" onclick="joinRoom()">শুরু করুন</button>
+            <input type="text" id="room-id" placeholder="রুম আইডি (ID)">
+            <button class="start-btn" onclick="joinRoom()">কানেক্ট করুন</button>
         </div>
     </div>
 
     <div id="main-screen" class="screen">
-        <div class="video-wrapper">
+        <div class="video-grid">
             <video id="local-video" autoplay muted playsinline></video>
             <video id="remote-video" autoplay playsinline></video>
         </div>
 
         <div id="chat-content"></div>
 
-        <div class="controls">
-            <div class="input-row">
+        <div class="call-controls">
+            <div class="message-input-row">
                 <input type="text" id="msg-input" placeholder="মেসেজ লিখুন...">
                 <button class="send-btn" onclick="sendMessage()">➤</button>
             </div>
-            <div class="btn-row">
-                <button class="action-btn" onclick="toggleMic()" id="mic-btn">🎙️<br>মাইক</button>
-                <button class="action-btn" onclick="toggleVideo()" id="cam-btn">📹<br>ক্যামেরা</button>
-                <button class="action-btn btn-exit" onclick="exitRoom()">📞<br>লিভ</button>
+
+            <div class="action-buttons-row">
+                <button id="mic-btn" class="control-btn btn-mic" onclick="toggleMic()">
+                    <span>🎤</span> মাইক অন
+                </button>
+                <button id="cam-btn" class="control-btn btn-cam" onclick="toggleVideo()">
+                    <span>📷</span> ক্যামেরা অন
+                </button>
+                <button class="control-btn btn-hangup" onclick="exitRoom()">
+                    <span>📞</span> লিভ চ্যাট
+                </button>
             </div>
         </div>
     </div>
 </div>
 
 <script>
-    // স্প্ল্যাশ স্ক্রিন রিমুভ (X লজিক)
-    window.onload = () => {
-        setTimeout(() => {
-            const splash = document.getElementById('splash-screen');
-            splash.style.opacity = '0';
-            setTimeout(() => splash.remove(), 500);
-        }, 2500);
-    };
+    // স্প্ল্যাশ স্ক্রিন রিমুভ
+    setTimeout(() => {
+        const splash = document.getElementById('splash-screen');
+        splash.style.opacity = '0';
+        setTimeout(() => splash.remove(), 500);
+    }, 2000);
 
     let peer, localStream, conn;
+    let isMicOn = true;
+    let isCamOn = true;
 
     function joinRoom() {
         const name = document.getElementById('username').value;
         const room = document.getElementById('room-id').value;
-        if (!name || !room) return alert("সব তথ্য দিন!");
+        if (!name || !room) return alert("সব তথ্য পূরণ করুন");
 
-        document.getElementById('display-name').innerText = name;
         peer = new Peer('hjb-' + room);
 
-        peer.on('open', (id) => {
+        peer.on('open', () => {
             document.getElementById('login-screen').classList.remove('active');
             document.getElementById('main-screen').classList.add('active');
             startMedia();
@@ -227,8 +174,7 @@
     }
 
     function connectAsGuest(id) {
-        const guestId = 'hjb-guest-' + Math.floor(Math.random()*1000);
-        peer = new Peer(guestId);
+        peer = new Peer('hjb-guest-' + Math.floor(Math.random()*999));
         peer.on('open', () => {
             document.getElementById('login-screen').classList.remove('active');
             document.getElementById('main-screen').classList.add('active');
@@ -247,12 +193,13 @@
         try {
             localStream = await navigator.mediaDevices.getUserMedia({video: true, audio: true});
             document.getElementById('local-video').srcObject = localStream;
-        } catch(e) { console.log("Media Error"); }
+        } catch(e) { alert("ক্যামেরা/মাইক পারমিশন দিন"); }
     }
 
+    // মেসেজ পাঠানো
     function sendMessage() {
         const inp = document.getElementById('msg-input');
-        if(conn && inp.value) {
+        if(conn && inp.value.trim() !== "") {
             conn.send(inp.value);
             appendMsg(inp.value, true);
             inp.value = "";
@@ -268,20 +215,29 @@
         box.scrollTop = box.scrollHeight;
     }
 
+    // মাইক্রোফোন অন/অফ (Audio Mute/Unmute)
     function toggleMic() {
-        const audio = localStream.getAudioTracks()[0];
-        audio.enabled = !audio.enabled;
-        document.getElementById('mic-btn').innerHTML = audio.enabled ? "🎙️<br>মাইক" : "🔇<br>মিউট";
+        isMicOn = !isMicOn;
+        localStream.getAudioTracks()[0].enabled = isMicOn;
+        const btn = document.getElementById('mic-btn');
+        btn.innerHTML = isMicOn ? "<span>🎤</span> মাইক অন" : "<span>🔇</span> মিউট";
+        btn.classList.toggle('off', !isMicOn);
     }
 
+    // ক্যামেরা অন/অফ (Video On/Off)
     function toggleVideo() {
-        const video = localStream.getVideoTracks()[0];
-        video.enabled = !video.enabled;
-        document.getElementById('cam-btn').innerHTML = video.enabled ? "📹<br>ক্যামেরা" : "🚫<br>অফ";
+        isCamOn = !isCamOn;
+        localStream.getVideoTracks()[0].enabled = isCamOn;
+        const btn = document.getElementById('cam-btn');
+        btn.innerHTML = isCamOn ? "<span>📷</span> ক্যামেরা অন" : "<span>🚫</span> ক্যামেরা অফ";
+        btn.classList.toggle('off', !isCamOn);
     }
 
+    // লিভ চ্যাট (Exit Room)
     function exitRoom() {
-        if(confirm("কলটি শেষ করতে চান?")) location.reload();
+        if(confirm("আপনি কি কলটি কেটে দিয়ে বের হতে চান?")) {
+            location.reload(); // পেজ রিলোড করে কানেকশন বন্ধ করবে
+        }
     }
 </script>
 
