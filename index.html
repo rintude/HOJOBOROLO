@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>হ জ ব র ল</title>
+
+<!-- PeerJS -->
+<script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+
+<style>
+    * {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: "Noto Serif Bengali", serif;
+    background: #f5efe6;
+    color: #3b2f2f;
+}
+
+header {
+    background: #7a1f1f;
+    color: #fff;
+    padding: 12px;
+    text-align: center;
+    font-size: 22px;
+    letter-spacing: 2px;
+}
+
+.container {
+    max-width: 900px;
+    margin: auto;
+    padding: 10px;
+}
+
+.card {
+    background: #fff8ee;
+    border-radius: 12px;
+    padding: 15px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    margin-bottom: 12px;
+}
+
+input, button {
+    width: 100%;
+    padding: 10px;
+    margin-top: 8px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    font-size: 16px;
+}
+
+button {
+    background: #7a1f1f;
+    color: white;
+    cursor: pointer;
+}
+
+button.secondary {
+    background: #a0522d;
+}
+
+button.danger {
+    background: #8b0000;
+}
+
+.chat-box {
+    height: 250px;
+    overflow-y: auto;
+    border: 1px solid #ccc;
+    padding: 8px;
+    background: #fff;
+    border-radius: 8px;
+}
+
+.message {
+    margin-bottom: 6px;
+}
+
+.controls {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+video {
+    width: 100%;
+    max-height: 220px;
+    background: black;
+    border-radius: 10px;
+    margin-top: 8px;
+}
+
+footer {
+    text-align: center;
+    font-size: 13px;
+    padding: 10px;
+    color: #555;
+}
+</style>
+</head>
+
+<body>
+
+<header>হ জ ব র ল</header>
+
+<div class="container">
+
+<!-- Login -->
+<div class="card" id="loginCard">
+    <h3>নাম ও সিক্রেট কোড</h3>
+    <input id="username" placeholder="আপনার নাম লিখুন">
+<input id="room" placeholder="সিক্রেট কোড">
+
+<button onclick="createRoom()">রুম তৈরি করুন</button>
+<button class="secondary" onclick="joinRoom()">রুমে জয়েন করুন</button>
+
+</div>
+
+<!-- Chat -->
+<div class="card" id="chatCard" style="display:none;">
+    <h3 id="roomTitle"></h3>
+    <div class="chat-box" id="chat"></div>
+    <input id="msg" placeholder="বার্তা লিখুন">
+    <button onclick="sendMsg()">পাঠান</button>
+</div>
+
+<!-- Call -->
+<div class="card" id="callCard" style="display:none;">
+    <h3>অডিও / ভিডিও কল</h3>
+    <video id="myVideo" autoplay muted playsinline></video>
+<video id="peerVideo" autoplay playsinline></video>
+
+
+    <div class="controls">
+        <button onclick="startCall()">ভিডিও কল</button>
+        <button onclick="toggleMic()">মাইক অন/অফ</button>
+        <button onclick="toggleCam()">ক্যামেরা অন/অফ</button>
+        <button class="danger" onclick="leave()">বেরিয়ে যান</button>
+    </div>
+</div>
+
+</div>
+
+<footer>
+© 2025 হ জ ব র ল | পরিকল্পনা ও নির্মাণ: বাবাই
+</footer>
+
+<script>
+let peer;
+let conn;
+let localStream;
+let micOn = true;
+let camOn = true;
+
+function createRoom() {
+    const name = username.value.trim();
+    const roomId = room.value.trim();
+
+    if (!name || !roomId) {
+        alert("নাম ও সিক্রেট কোড দিন");
+        return;
+    }
+
+    peer = new Peer(roomId); // room creator ID = secret code
+
+    peer.on("open", () => {
+        enterRoom("আপনি রুম তৈরি করেছেন");
+    });
+
+    peer.on("connection", c => {
+        conn = c;
+        setupConn();
+    });
+
+    handleCalls();
+}
+
+function joinRoom() {
+    const name = username.value.trim();
+    const roomId = room.value.trim();
+
+    if (!name || !roomId) {
+        alert("নাম ও সিক্রেট কোড দিন");
+        return;
+    }
+
+    peer = new Peer(); // auto ID
+
+    peer.on("open", () => {
+        conn = peer.connect(roomId);
+        conn.on("open", () => {
+            setupConn();
+            enterRoom("আপনি রুমে জয়েন করেছেন");
+        });
+    });
+
+    handleCalls();
+}
+
+function setupConn() {
+    if (!conn) return;
+    conn.on("data", data => {
+        addMsg(data.name, data.msg);
+    });
+}
+
+function enterRoom(msg) {
+    loginCard.style.display = "none";
+    chatCard.style.display = "block";
+    callCard.style.display = "block";
+    roomTitle.innerText = "রুম: " + room.value;
+    addMsg("সিস্টেম", msg);
+}
+
+function sendMsg() {
+    if (!conn) return;
+    const text = msg.value.trim();
+    if (!text) return;
+
+    conn.send({ name: username.value, msg: text });
+    addMsg("আমি", text);
+    msg.value = "";
+}
+
+function addMsg(user, text) {
+    chat.innerHTML += `<div><b>${user}:</b> ${text}</div>`;
+    chat.scrollTop = chat.scrollHeight;
+}
+
+function handleCalls() {
+    peer.on("call", call => {
+    navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+    .then(stream => {
+        localStream = stream;
+        myVideo.srcObject = stream;
+        call.answer(stream);
+        call.on("stream", remote => {
+            peerVideo.srcObject = remote;
+        });
+    });
+});
+
+}
+
+
+    function startCall() {
+    if (!peer || !conn) {
+        alert("কোনো ইউজার যুক্ত নেই");
+        return;
+    }
+
+    navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+    .then(stream => {
+        localStream = stream;
+        myVideo.srcObject = stream;
+
+        // 👉 শুধু জয়েন করা ইউজার কল করবে
+        if (peer.id !== room.value) {
+            const call = peer.call(room.value, stream);
+            call.on("stream", remote => {
+                peerVideo.srcObject = remote;
+            });
+        }
+    })
+    .catch(err => {
+        alert("ক্যামেরা বা মাইকে সমস্যা হচ্ছে");
+        console.error(err);
+    });
+}
+
+
+
+function toggleMic() {
+    if (!localStream) return;
+    micOn = !micOn;
+    localStream.getAudioTracks()[0].enabled = micOn;
+}
+
+function toggleCam() {
+    if (!localStream) return;
+    camOn = !camOn;
+    localStream.getVideoTracks()[0].enabled = camOn;
+}
+
+function leave() {
+    if (peer) peer.destroy();
+    location.reload();
+}
+</script>
+
+
+</body>
+</html>
