@@ -33,15 +33,15 @@ footer{text-align:center;font-size:12px;opacity:.6;padding:10px}
 <div class="card" id="login">
 <input id="username" placeholder="আপনার নাম">
 <input id="roomCode" placeholder="সিক্রেট কোড">
-<button onclick="createRoom()">রুম তৈরি করুন</button>
-<button class="secondary" onclick="joinRoom()">রুমে জয়েন করুন</button>
+<button id="createBtn">রুম তৈরি করুন</button>
+<button class="secondary" id="joinBtn">রুমে জয়েন করুন</button>
 </div>
 
 <!-- CHAT CARD -->
 <div class="card" id="chatCard" style="display:none">
 <div class="chat" id="chat"></div>
 <input id="msg" placeholder="বার্তা লিখুন">
-<button onclick="sendMsg()">পাঠান</button>
+<button id="sendBtn">পাঠান</button>
 </div>
 
 <!-- VIDEO CARD -->
@@ -49,9 +49,9 @@ footer{text-align:center;font-size:12px;opacity:.6;padding:10px}
 <video id="myVideo" autoplay muted playsinline></video>
 <video id="remoteVideo" autoplay playsinline></video>
 <div class="controls">
-<button onclick="toggleMic()">মাইক</button>
-<button onclick="toggleCam()">ক্যামেরা</button>
-<button class="danger" onclick="leaveRoom()">বেরিয়ে যান</button>
+<button id="micBtn">মাইক</button>
+<button id="camBtn">ক্যামেরা</button>
+<button class="danger" id="leaveBtn">বেরিয়ে যান</button>
 </div>
 </div>
 
@@ -60,28 +60,60 @@ footer{text-align:center;font-size:12px;opacity:.6;padding:10px}
 <footer>© 2025 হ জ ব র ল | বাবাই</footer>
 
 <script>
-let peer,conn,call;
+let peer, conn, call;
 let localStream;
-let myName="",peerName="";
+let myName="", peerName="";
 let isHost=false;
 
-function log(t){chat.innerHTML+=`<div>${t}</div>`;chat.scrollTop=chat.scrollHeight}
-
-async function initMedia(){
-  if(localStream) return;
-  localStream = await navigator.mediaDevices.getUserMedia({video:true,audio:true});
-  myVideo.srcObject = localStream;
+/* Utility */
+function log(t){
+  chat.innerHTML += `<div>${t}</div>`;
+  chat.scrollTop = chat.scrollHeight;
 }
 
+/* Media Init */
+async function initMedia(){
+  if(localStream) return;
+  try {
+    localStream = await navigator.mediaDevices.getUserMedia({video:true,audio:true});
+    myVideo.srcObject = localStream;
+  } catch(e){
+    alert("Camera/Mic access denied! "+e.message);
+  }
+}
+
+/* Enter UI */
 function enterUI(){
   login.style.display="none";
   chatCard.style.display="block";
   callCard.style.display="block";
 }
 
-async function createRoom(){
-  if(!username.value || !roomCode.value){alert("নাম ও কোড দিন"); return;}
-  myName = username.value; isHost = true;
+/* Setup Connection */
+function setupConn(){
+  if(!conn) return;
+  conn.on("data", d => log(`<b>${d.name}:</b> ${d.msg}`));
+  conn.on("close", ()=>{
+    if(isHost) {
+      alert(peerName+" রুম ছেড়ে গেছে");
+      log("🔴 "+peerName+" রুম ছেড়ে গেছে");
+    }
+  });
+}
+
+/* Chat Send */
+function sendMsg(){
+  if(!conn || !msg.value) return;
+  conn.send({name:myName, msg:msg.value});
+  log("<b>আমি:</b> "+msg.value);
+  msg.value="";
+}
+
+/* Buttons */
+document.getElementById("createBtn").onclick = async ()=>{
+  if(!username.value || !roomCode.value){ alert("নাম ও কোড দিন"); return; }
+  myName = username.value;
+  isHost = true;
   await initMedia();
 
   peer = new Peer(roomCode.value,{
@@ -91,9 +123,9 @@ async function createRoom(){
     ]}
   });
 
-  peer.on("open",()=>{enterUI(); log("🟢 রুম তৈরি হয়েছে")});
+  peer.on("open", ()=>{ enterUI(); log("🟢 রুম তৈরি হয়েছে"); });
 
-  peer.on("connection",c=>{
+  peer.on("connection", c=>{
     conn = c;
     peerName = c.metadata?.name || "একজন ইউজার";
     alert(peerName+" রুমে জয়েন করেছে");
@@ -103,55 +135,48 @@ async function createRoom(){
     call.on("stream", s=>remoteVideo.srcObject = s);
   });
 
-  peer.on("call",c=>{
+  peer.on("call", c=>{
     call = c;
     c.answer(localStream);
     c.on("stream", s=>remoteVideo.srcObject = s);
   });
-}
+};
 
-async function joinRoom(){
-  if(!username.value || !roomCode.value){alert("নাম ও কোড দিন"); return;}
+document.getElementById("joinBtn").onclick = async ()=>{
+  if(!username.value || !roomCode.value){ alert("নাম ও কোড দিন"); return; }
   myName = username.value;
   await initMedia();
 
-  peer = new Peer({config:{iceServers:[
-    {urls:"stun:stun.l.google.com:19302"},
-    {urls:"stun:stun1.l.google.com:19302"}
-  ]}});
+  peer = new Peer({
+    config:{iceServers:[
+      {urls:"stun:stun.l.google.com:19302"},
+      {urls:"stun:stun1.l.google.com:19302"}
+    ]}
+  });
 
-  peer.on("open",()=>{
+  peer.on("open", ()=>{
     conn = peer.connect(roomCode.value,{metadata:{name:myName}});
-    conn.on("open",()=>{enterUI(); log("🟢 রুমে জয়েন করা হয়েছে")});
+    conn.on("open", ()=>{ enterUI(); log("🟢 রুমে জয়েন করা হয়েছে"); });
     setupConn();
   });
 
-  peer.on("call",c=>{
+  peer.on("call", c=>{
     call = c;
     c.answer(localStream);
     c.on("stream", s=>remoteVideo.srcObject = s);
   });
-}
+};
 
-function setupConn(){
-  conn.on("data",d=>log(`<b>${d.name}:</b> ${d.msg}`));
-  conn.on("close",()=>{
-    if(isHost){
-      alert(peerName+" রুম ছেড়ে গেছে");
-      log("🔴 "+peerName+" রুম ছেড়ে গেছে");
-    }
-  });
-}
-
-function sendMsg(){
-  if(!conn || !msg.value) return;
-  conn.send({name:myName,msg:msg.value});
-  log("<b>আমি:</b> "+msg.value); msg.value="";
-}
-
-function toggleMic(){if(localStream)localStream.getAudioTracks()[0].enabled^=1}
-function toggleCam(){if(localStream)localStream.getVideoTracks()[0].enabled^=1}
-function leaveRoom(){if(call)call.close(); if(conn)conn.close(); if(peer)peer.destroy(); location.reload()}
+/* Control Buttons */
+document.getElementById("sendBtn").onclick = sendMsg;
+document.getElementById("micBtn").onclick = ()=>{ if(localStream)localStream.getAudioTracks()[0].enabled^=1; };
+document.getElementById("camBtn").onclick = ()=>{ if(localStream)localStream.getVideoTracks()[0].enabled^=1; };
+document.getElementById("leaveBtn").onclick = ()=>{
+  if(call) call.close();
+  if(conn) conn.close();
+  if(peer) peer.destroy();
+  location.reload();
+};
 </script>
 
 </body>
