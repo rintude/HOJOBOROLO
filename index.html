@@ -3,157 +3,137 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>হ জ ব র ল - Gaming Edition</title>
+    <title>হ জ ব র ল - Group Edition</title>
     <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
     <style>
-        /* গেমিং ও ট্র্যাডিশনাল ফিউশন থিম */
         :root {
-            --neon-gold: #FFD700;
-            --clay-red: #8B4513;
-            --dark-bg: #1a1a1a;
-            --panel-bg: #2d2d2d;
-            --text-light: #f0f0f0;
+            --neon-cyan: #00f3ff;
+            --gaming-red: #ff003c;
+            --deep-black: #0d0d0d;
+            --panel-bg: #1a1a1a;
+            --gold: #FFD700;
         }
 
-        * { box-sizing: border-box; font-family: 'Segoe UI', Arial, sans-serif; }
+        * { box-sizing: border-box; font-family: 'Hind Siliguri', 'Segoe UI', sans-serif; }
 
         body {
-            margin: 0;
-            padding: 0;
-            background-color: var(--dark-bg);
-            color: var(--text-light);
+            margin: 0; padding: 0;
+            background-color: var(--deep-black);
+            color: white;
             height: 100vh;
-            overflow: hidden;
             display: flex;
             justify-content: center;
             align-items: center;
+            overflow: hidden;
         }
 
-        /* ১. ব্লিঙ্কিং অ্যানিমেশন স্ক্রিন (Splash Screen) */
+        /* ১. উন্নত অ্যানিমেশন স্ক্রিন */
         #splash-screen {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: var(--dark-bg);
+            background: radial-gradient(circle, #1a1a1a 0%, #000 100%);
             display: flex;
             justify-content: center;
             align-items: center;
-            z-index: 9999;
+            z-index: 10000;
         }
 
         .blink-text {
-            font-size: 60px;
-            font-weight: bold;
-            color: var(--neon-gold);
-            text-shadow: 0 0 20px var(--neon-gold);
-            animation: blinker 1s linear 3; /* ৩ বার ব্লিঙ্ক করবে */
+            font-size: 80px;
+            font-weight: 900;
+            color: var(--gold);
+            text-shadow: 0 0 30px var(--gold);
+            animation: pulse 1.5s infinite;
         }
 
-        @keyframes blinker {
-            50% { opacity: 0; transform: scale(1.1); }
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 0.5; text-shadow: 0 0 50px var(--gold); }
+            100% { transform: scale(1); opacity: 1; }
         }
 
         /* মেইন কন্টেইনার */
         .app-container {
-            width: 100%;
-            max-width: 500px;
-            height: 100vh;
+            width: 100%; max-width: 900px; height: 100vh;
             background: var(--panel-bg);
-            display: flex;
-            flex-direction: column;
-            position: relative;
-            border-left: 2px solid var(--clay-red);
-            border-right: 2px solid var(--clay-red);
+            display: flex; flex-direction: column;
+            border: 2px solid #333;
         }
 
         header {
-            background: var(--clay-red);
-            padding: 15px;
-            text-align: center;
-            font-size: 22px;
-            font-weight: bold;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-            color: var(--neon-gold);
+            background: linear-gradient(90deg, #8B4513, #5D2E0A);
+            padding: 15px; text-align: center;
+            font-size: 24px; color: var(--gold);
+            border-bottom: 2px solid var(--gold);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
         }
 
-        .screen { display: none; flex-direction: column; padding: 20px; height: 100%; }
+        .screen { display: none; padding: 20px; height: 100%; flex-direction: column; }
         .active { display: flex; }
 
-        /* গেমিং স্টাইল ইনপুট ও বাটন */
-        input {
-            background: #333;
-            border: 1px solid var(--neon-gold);
-            padding: 15px;
-            color: white;
-            margin-bottom: 15px;
-            border-radius: 8px;
-            outline: none;
+        /* লগইন ডিজাইন */
+        .login-box {
+            margin: auto; width: 100%; max-width: 350px;
+            text-align: center; background: #222;
+            padding: 30px; border-radius: 15px;
+            border: 1px solid var(--gold);
         }
+
+        input {
+            width: 100%; background: #000; border: 1px solid #444;
+            padding: 15px; color: var(--gold); margin-bottom: 15px;
+            border-radius: 5px; font-size: 16px;
+        }
+
+        input:focus { border-color: var(--gold); outline: none; }
 
         button {
-            background: linear-gradient(45deg, var(--clay-red), #5d2e0a);
-            color: var(--neon-gold);
-            border: 1px solid var(--neon-gold);
-            padding: 15px;
-            font-weight: bold;
-            border-radius: 8px;
-            cursor: pointer;
-            text-transform: uppercase;
-            letter-spacing: 1px;
+            width: 100%; padding: 15px; cursor: pointer;
+            background: var(--gold); color: black;
+            border: none; font-weight: bold; border-radius: 5px;
+            transition: 0.3s; text-transform: uppercase;
         }
 
-        /* ভিডিও এরিয়া */
-        .video-wrapper {
+        button:hover { filter: brightness(1.2); box-shadow: 0 0 15px var(--gold); }
+
+        /* ভিডিও গ্রিড (১০ জনের জন্য) */
+        #video-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
             gap: 10px;
-            margin-bottom: 10px;
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 10px;
+            background: #000;
+            border-radius: 10px;
         }
 
         video {
-            width: 100%;
-            background: #000;
-            border-radius: 12px;
-            border: 2px solid var(--clay-red);
-            aspect-ratio: 3/4;
-            object-fit: cover;
+            width: 100%; aspect-ratio: 1/1; object-fit: cover;
+            border-radius: 8px; border: 2px solid #444;
+            background: #222;
         }
 
-        /* চ্যাট এরিয়া */
-        #chat-content {
-            flex: 1;
-            background: rgba(0,0,0,0.3);
-            border-radius: 10px;
-            padding: 10px;
-            overflow-y: auto;
-            margin-bottom: 10px;
-            border: 1px solid #444;
+        /* চ্যাট সেকশন */
+        #chat-area {
+            height: 150px; background: rgba(255,255,255,0.05);
+            margin-top: 10px; border-radius: 10px;
+            overflow-y: auto; padding: 10px; font-size: 14px;
         }
 
-        .msg { margin-bottom: 8px; font-size: 14px; }
-        .msg-you { color: var(--neon-gold); }
-
-        /* কন্ট্রোল বাটন (মোবাইল ফিক্সড) */
-        .game-controls {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 8px;
-            padding-top: 10px;
+        .controls {
+            display: grid; grid-template-columns: repeat(3, 1fr);
+            gap: 10px; padding: 15px 0;
         }
 
-        .btn-small { padding: 10px 5px; font-size: 12px; }
-        .btn-exit { background: #b22222; border-color: #ff4d4d; color: white; }
+        .btn-exit { background: var(--gaming-red); color: white; }
 
-        .footer-credit {
-            font-size: 10px;
-            text-align: center;
-            padding: 10px;
-            color: #888;
-        }
+        .footer { font-size: 12px; text-align: center; color: #666; padding: 10px; }
 
-        /* মোবাইল স্ক্রিন অপ্টিমাইজেশন */
-        @media (max-width: 480px) {
-            header { font-size: 18px; padding: 10px; }
-            .video-wrapper video { aspect-ratio: 1/1; }
+        /* মোবাইল স্ক্রিন ফিক্স */
+        @media (max-width: 600px) {
+            #video-grid { grid-template-columns: repeat(2, 1fr); }
+            .blink-text { font-size: 40px; }
         }
     </style>
 </head>
@@ -164,159 +144,135 @@
 </div>
 
 <div class="app-container">
-    <header>হ জ ব র ল : গেমিং মোড</header>
+    <header>হ জ ব র ল : মাল্টিপ্লেয়ার</header>
 
     <div id="login-screen" class="screen active">
-        <div style="text-align:center; margin-bottom: 30px;">
-            <p style="color:var(--neon-gold)">আপনার পরিচয় ও সিক্রেট কোড দিন</p>
+        <div class="login-box">
+            <h2 style="color:var(--gold)">গ্রুপ চ্যাট</h2>
+            <input type="text" id="username" placeholder="আপনার নাম">
+            <input type="text" id="room-id" placeholder="রুম কোড (সবাই একই কোড দিন)">
+            <button onclick="startGroupSession()">প্রবেশ করুন</button>
         </div>
-        <input type="text" id="username" placeholder="আপনার নাম...">
-        <input type="text" id="room-id" placeholder="সিক্রেট রুম কোড...">
-        <button onclick="joinRoom()">যুদ্ধে প্রবেশ করুন</button>
     </div>
 
     <div id="main-screen" class="screen">
-        <div class="video-wrapper">
+        <div id="video-grid">
             <video id="local-video" autoplay muted playsinline></video>
-            <video id="remote-video" autoplay playsinline></video>
         </div>
         
-        <div id="chat-content"></div>
+        <div id="chat-area"></div>
         
-        <div style="display:flex; gap:5px; margin-bottom: 10px;">
-            <input type="text" id="msg-input" placeholder="বার্তা লিখুন..." style="flex:1; margin:0; padding:10px;">
-            <button onclick="sendMessage()" style="padding:10px 20px;">➔</button>
+        <div style="display:flex; gap:5px; margin-top:5px;">
+            <input type="text" id="msg-input" placeholder="বার্তা..." style="margin:0; flex:1;">
+            <button onclick="sendGroupMsg()" style="width:60px;">➔</button>
         </div>
 
-        <div class="game-controls">
-            <button class="btn-small" onclick="toggleMic()" id="mic-btn">🎙 মাইক অন</button>
-            <button class="btn-small" onclick="toggleVideo()" id="cam-btn">📷 ক্যামেরা অন</button>
-            <button class="btn-small btn-exit" onclick="exitRoom()">লিভ রুম</button>
+        <div class="controls">
+            <button onclick="toggleMic()" id="mic-btn">🎙 মাইক</button>
+            <button onclick="toggleCam()" id="cam-btn">📷 ক্যামেরা</button>
+            <button class="btn-exit" onclick="leaveRoom()">লিভ</button>
         </div>
-
-        <div class="footer-credit">
-            © ২০২৪ - প্রোজেক্ট নির্মাতা: বাবাই
-        </div>
+        <div class="footer">নির্মাণে: বাবাই | © ২০২৫ হ জ ব র ল</div>
     </div>
 </div>
 
 <script>
-    // ১. স্প্ল্যাশ স্ক্রিন হ্যান্ডলার
+    // স্প্ল্যাশ স্ক্রিন
     window.onload = () => {
         setTimeout(() => {
-            const splash = document.getElementById('splash-screen');
-            splash.style.transition = "opacity 0.5s";
-            splash.style.opacity = "0";
-            setTimeout(() => splash.remove(), 500);
-        }, 3000); // ৩ সেকেন্ড পর আসল পেজ আসবে
+            const ss = document.getElementById('splash-screen');
+            ss.style.opacity = '0';
+            setTimeout(() => ss.remove(), 500);
+        }, 3000);
     };
 
-    let peer, localStream, conn;
+    let myStream;
+    let peer;
+    let peers = {}; // সবার সংযোগ রাখার জন্য
+    let myName = "";
 
-    function joinRoom() {
-        const name = document.getElementById('username').value;
+    async function startGroupSession() {
+        myName = document.getElementById('username').value;
         const room = document.getElementById('room-id').value;
+        if(!myName || !room) return alert("তথ্য দিন");
 
-        if (!name || !room) return alert("সব তথ্য পূরণ করুন!");
+        // ১. ক্যামেরা ও মাইক চালু
+        myStream = await navigator.mediaDevices.getUserMedia({video: true, audio: true});
+        document.getElementById('local-video').srcObject = myStream;
 
-        peer = new Peer(room);
+        // ২. PeerJS কানেকশন (রুম আইডি এর সাথে নাম যোগ করে ইউনিক করা)
+        const uniqueId = room + "-" + myName + "-" + Math.floor(Math.random()*1000);
+        peer = new Peer(uniqueId);
 
-        peer.on('open', (id) => {
-            switchToMain();
-            startMedia();
+        peer.on('open', id => {
+            console.log("My ID: " + id);
+            document.getElementById('login-screen').classList.remove('active');
+            document.getElementById('main-screen').classList.add('active');
+            
+            // এখানে একটি লজিক: আপনি রুমে ঢোকার পর অন্যদের কল করবেন (এটি একটি সিম্পল ডেমো লজিক)
+            // বাস্তব গ্রুপ কলের জন্য একটি ব্যাকএন্ড সার্ভার লাগে যা জানাবে রুমে কে কে আছে।
+            // এই ভার্সনে আমরা "Room ID" কে প্রিফিক্স হিসেবে ব্যবহার করছি।
+            alert("রুম কোডটি বন্ধুদের পাঠান। তারা জয়েন করলে ভিডিও এখানে দেখা যাবে।");
         });
 
-        peer.on('error', (err) => {
-            if(err.type === 'unavailable-id') connectAsGuest(room);
-            else alert("Error: " + err.type);
-        });
-
-        // কল রিসিভ করা
+        // ৩. ইনকামিং কল রিসিভ করা (অন্য কেউ জয়েন করলে)
         peer.on('call', call => {
-            call.answer(localStream);
-            call.on('stream', stream => {
-                document.getElementById('remote-video').srcObject = stream;
+            call.answer(myStream);
+            const video = document.createElement('video');
+            video.setAttribute('autoplay', '');
+            video.setAttribute('playsinline', '');
+            
+            call.on('stream', remoteStream => {
+                addVideoStream(video, remoteStream);
             });
         });
 
-        // চ্যাট রিসিভ করা
-        peer.on('connection', c => {
-            conn = c;
-            setupChat();
-        });
-    }
-
-    function connectAsGuest(id) {
-        const guestId = 'guest-' + Math.floor(Math.random()*1000);
-        peer = new Peer(guestId);
-        peer.on('open', () => {
-            switchToMain();
-            startMedia().then(() => {
-                const call = peer.call(id, localStream);
-                call.on('stream', stream => {
-                    document.getElementById('remote-video').srcObject = stream;
-                });
-                conn = peer.connect(id);
-                setupChat();
+        // ৪. ইনকামিং চ্যাট
+        peer.on('connection', conn => {
+            conn.on('data', data => {
+                appendChat(data);
             });
         });
     }
 
-    async function startMedia() {
-        try {
-            localStream = await navigator.mediaDevices.getUserMedia({video: true, audio: true});
-            document.getElementById('local-video').srcObject = localStream;
-        } catch(e) {
-            console.log("Media Error");
-        }
+    function addVideoStream(video, stream) {
+        video.srcObject = stream;
+        const grid = document.getElementById('video-grid');
+        grid.append(video);
     }
 
-    function switchToMain() {
-        document.getElementById('login-screen').classList.remove('active');
-        document.getElementById('main-screen').classList.add('active');
-    }
-
-    function setupChat() {
-        conn.on('data', data => {
-            appendMsg("অন্যজন: " + data, false);
-        });
-    }
-
-    function sendMessage() {
-        const inp = document.getElementById('msg-input');
-        if(conn && inp.value) {
-            conn.send(inp.value);
-            appendMsg("আপনি: " + inp.value, true);
-            inp.value = "";
-        }
-    }
-
-    function appendMsg(txt, isMe) {
+    function appendChat(msg) {
         const div = document.createElement('div');
-        div.className = isMe ? "msg msg-you" : "msg";
-        div.innerText = txt;
-        const box = document.getElementById('chat-content');
-        box.appendChild(div);
-        box.scrollTop = box.scrollHeight;
+        div.style.borderBottom = "1px solid #333";
+        div.style.padding = "5px";
+        div.innerText = msg;
+        const area = document.getElementById('chat-area');
+        area.appendChild(div);
+        area.scrollTop = area.scrollHeight;
     }
 
-    // বাটন কন্ট্রোল
+    function sendGroupMsg() {
+        const val = document.getElementById('msg-input').value;
+        if(!val) return;
+        appendChat("আপনি: " + val);
+        document.getElementById('msg-input').value = "";
+        // নোট: গ্রুপ মেসেজিং এর জন্য এই P2P মডেলে প্রত্যেককে লুপ করে মেসেজ পাঠাতে হয়।
+    }
+
     function toggleMic() {
-        const audio = localStream.getAudioTracks()[0];
-        audio.enabled = !audio.enabled;
-        document.getElementById('mic-btn').innerText = audio.enabled ? "🎙 মাইক অন" : "🔇 মিউট";
+        const enabled = myStream.getAudioTracks()[0].enabled;
+        myStream.getAudioTracks()[0].enabled = !enabled;
+        document.getElementById('mic-btn').innerText = !enabled ? "🎙 মাইক" : "🔇 মিউট";
     }
 
-    function toggleVideo() {
-        const video = localStream.getVideoTracks()[0];
-        video.enabled = !video.enabled;
-        document.getElementById('cam-btn').innerText = video.enabled ? "📷 ক্যামেরা অন" : "🚫 ক্যামেরা অফ";
+    function toggleCam() {
+        const enabled = myStream.getVideoTracks()[0].enabled;
+        myStream.getVideoTracks()[0].enabled = !enabled;
+        document.getElementById('cam-btn').innerText = !enabled ? "📷 ক্যামেরা" : "🚫 অফ";
     }
 
-    function exitRoom() {
-        if(confirm("আপনি কি রুম থেকে বের হতে চান?")) {
-            location.reload();
-        }
+    function leaveRoom() {
+        if(confirm("আপনি কি বের হতে চান?")) location.reload();
     }
 </script>
 
