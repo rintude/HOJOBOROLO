@@ -6,42 +6,41 @@
     <title>হ জ ব র ল - Gaming Pro</title>
     <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
     <style>
-        /* গেমিং থিম কনফিগারেশন */
         :root {
             --neon-gold: #FFD700;
             --clay-red: #8B4513;
             --dark-bg: #0d0d0d;
             --panel-bg: #1a1a1a;
-            --neon-glow: 0 0 10px rgba(255, 215, 0, 0.5);
         }
 
         * { 
             box-sizing: border-box; 
-            font-family: 'Orbitron', 'Segoe UI', sans-serif; 
+            font-family: 'Segoe UI', Roboto, sans-serif; 
+            margin: 0; padding: 0;
             -webkit-tap-highlight-color: transparent;
         }
 
         body {
-            margin: 0; padding: 0;
             background-color: var(--dark-bg);
             color: white;
             height: 100vh;
+            width: 100vw;
             display: flex;
             justify-content: center;
-            overflow: hidden;
+            overflow: hidden; /* স্ক্রিন স্ক্রোল হবে না */
         }
 
         /* স্প্ল্যাশ স্ক্রিন */
         #splash-screen {
             position: fixed; inset: 0;
-            background: radial-gradient(circle, #222, #000);
+            background: #000;
             display: flex; justify-content: center; align-items: center;
             z-index: 10000;
         }
         .blink-text {
-            font-size: 50px; font-weight: 900;
+            font-size: 50px; font-weight: bold;
             color: var(--neon-gold);
-            text-shadow: var(--neon-glow);
+            text-shadow: 0 0 15px var(--neon-gold);
             animation: blinker 0.8s linear infinite alternate;
         }
         @keyframes blinker { from { opacity: 1; } to { opacity: 0.1; } }
@@ -49,81 +48,80 @@
         /* মেইন কন্টেইনার */
         .app-container {
             width: 100%; max-width: 500px;
-            height: 100vh;
+            height: 100%; /* সম্পূর্ণ উচ্চতা */
             background: var(--panel-bg);
             display: flex; flex-direction: column;
-            border-left: 2px solid var(--clay-red);
-            border-right: 2px solid var(--clay-red);
-            position: relative;
+            border-left: 1px solid #333;
+            border-right: 1px solid #333;
         }
 
         header {
+            height: 60px;
             background: linear-gradient(180deg, var(--clay-red), #3d200a);
-            padding: 12px; text-align: center;
+            display: flex; align-items: center; justify-content: center;
             font-size: 20px; font-weight: bold; color: var(--neon-gold);
             border-bottom: 2px solid var(--neon-gold);
-            box-shadow: 0 2px 15px rgba(0,0,0,0.8);
+            flex-shrink: 0;
         }
 
-        .screen { display: none; flex-direction: column; height: calc(100vh - 50px); padding: 15px; }
+        .screen { display: none; flex-direction: column; height: calc(100% - 60px); }
         .active { display: flex; }
 
-        /* লগইন স্টাইল */
-        .login-box { margin: auto; width: 100%; text-align: center; }
+        /* লগইন বক্স */
+        .login-box { margin: auto; width: 85%; text-align: center; }
         input {
             width: 100%; padding: 15px; margin-bottom: 15px;
             background: #000; border: 1px solid var(--neon-gold);
-            color: var(--neon-gold); border-radius: 5px; outline: none;
+            color: var(--neon-gold); border-radius: 8px; outline: none;
         }
         .start-btn {
             width: 100%; padding: 15px; background: var(--neon-gold);
             color: black; border: none; font-weight: bold;
-            border-radius: 5px; cursor: pointer; box-shadow: var(--neon-glow);
+            border-radius: 8px; cursor: pointer; text-transform: uppercase;
         }
 
-        /* ভিডিও গ্রিড */
+        /* ভিডিও সেকশন */
         .video-wrapper {
             display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
-            flex-shrink: 0; margin-bottom: 10px;
+            padding: 10px; flex-shrink: 0;
         }
         video {
             width: 100%; aspect-ratio: 1/1; object-fit: cover;
             background: #000; border: 1px solid var(--clay-red); border-radius: 10px;
         }
 
-        /* চ্যাট বক্স - যা বাকি জায়গা দখল করবে */
+        /* চ্যাট সেকশন (বাকি জায়গা দখল করবে) */
         #chat-content {
             flex-grow: 1; 
-            background: rgba(0,0,0,0.5);
-            border: 1px solid #333; border-radius: 10px;
-            padding: 10px; overflow-y: auto; margin-bottom: 80px; /* কন্ট্রোলারের জন্য জায়গা রাখা */
+            background: rgba(0,0,0,0.3);
+            border: 1px solid #222; margin: 0 10px;
+            border-radius: 10px; padding: 10px; 
+            overflow-y: auto; font-size: 14px;
         }
-        .msg { margin-bottom: 5px; font-size: 14px; }
+        .msg { margin-bottom: 5px; }
         .msg-you { color: var(--neon-gold); font-weight: bold; }
 
-        /* ফিক্সড কন্ট্রোল প্যানেল (মোবাইল ফিক্স) */
+        /* ফিক্সড কন্ট্রোল প্যানেল (স্ক্রিনের নিচে আটকানো থাকবে) */
         .controls-panel {
-            position: absolute;
-            bottom: 0; left: 0; right: 0;
-            background: #111;
             padding: 10px;
-            display: flex; flex-direction: column;
-            gap: 10px;
-            border-top: 1px solid var(--clay-red);
+            background: #111;
+            border-top: 1px solid #333;
+            flex-shrink: 0; /* এটি সংকুচিত হবে না */
         }
 
-        .input-row { display: flex; gap: 5px; }
-        .input-row input { margin-bottom: 0; flex: 1; padding: 10px; }
+        .input-row { display: flex; gap: 5px; margin-bottom: 10px; }
+        .input-row input { margin-bottom: 0; flex: 1; padding: 12px; font-size: 14px; }
         .input-row button { width: 50px; padding: 0; }
 
-        .btn-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; }
+        .btn-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
         .btn-action { 
-            padding: 12px 5px; font-size: 11px; background: #222; 
-            border: 1px solid #444; color: white; border-radius: 5px;
+            padding: 12px 2px; font-size: 11px; background: #222; 
+            border: 1px solid #444; color: white; border-radius: 6px;
         }
-        .btn-exit { background: #610000; border-color: red; }
+        .btn-exit { background: #610000; border-color: #ff0000; }
 
-        .footer-text { font-size: 9px; text-align: center; color: #555; margin-top: 5px; }
+        .footer-text { font-size: 10px; text-align: center; color: #555; margin-top: 8px; }
+
     </style>
 </head>
 <body>
@@ -137,7 +135,7 @@
         <div class="login-box">
             <input type="text" id="username" placeholder="আপনার ডাকনাম">
             <input type="text" id="room-id" placeholder="সিক্রেট রুম কোড">
-            <button class="start-btn" onclick="joinRoom()">যুদ্ধে প্রবেশ করুন</button>
+            <button class="start-btn" onclick="joinRoom()">স্টার্ট গেম</button>
         </div>
     </div>
 
@@ -159,19 +157,18 @@
                 <button class="btn-action" onclick="toggleVideo()" id="cam-btn">📷 ক্যামেরা অন</button>
                 <button class="btn-action btn-exit" onclick="exitRoom()">লিভ রুম</button>
             </div>
-            <div class="footer-text">© ২০২৪ - প্রোজেক্ট নির্মাতা: বাবাই</div>
+            <div class="footer-text">© ২০২৫ - প্রোজেক্ট নির্মাতা: বাবাই</div>
         </div>
     </div>
 </div>
 
 <script>
-    // স্প্ল্যাশ স্ক্রিন রিমুভ
     window.onload = () => {
         setTimeout(() => {
             const splash = document.getElementById('splash-screen');
             splash.style.opacity = '0';
             setTimeout(() => splash.remove(), 500);
-        }, 3000);
+        }, 2500);
     };
 
     let peer, localStream, conn;
@@ -227,7 +224,7 @@
         try {
             localStream = await navigator.mediaDevices.getUserMedia({video: true, audio: true});
             document.getElementById('local-video').srcObject = localStream;
-        } catch(e) { console.log("Media Error"); }
+        } catch(e) { alert("ক্যামেরা/মাইক পারমিশন দিন!"); }
     }
 
     function sendMessage() {
@@ -257,7 +254,7 @@
     function toggleVideo() {
         const video = localStream.getVideoTracks()[0];
         video.enabled = !video.enabled;
-        document.getElementById('cam-btn').innerText = video.enabled ? "📷 ক্যামেরা অন" : "🚫 অফ";
+        document.getElementById('cam-btn').innerText = video.enabled ? "📷 ক্যামেরা অন" : "🚫 ক্যামেরা অফ";
     }
 
     function exitRoom() {
