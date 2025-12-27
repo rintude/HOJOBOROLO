@@ -11,39 +11,29 @@
 *{box-sizing:border-box}
 body{
     margin:0;
-    font-family:system-ui, sans-serif;
-    background:radial-gradient(circle at top,#1e1e2f,#0b0b12);
+    font-family:system-ui,sans-serif;
+    background:radial-gradient(circle at top,#1e1e2f,#05050a);
     color:#fff;
-    overflow:hidden;
 }
 
 /* SPLASH */
 #splash{
-    position:fixed;
-    inset:0;
-    background:radial-gradient(circle,#ff004c,#7a1f1f,#000);
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    font-size:48px;
-    font-weight:800;
+    position:fixed; inset:0;
+    background:linear-gradient(135deg,#ff004c,#ff7b00);
+    display:flex; align-items:center; justify-content:center;
+    font-size:48px; font-weight:800;
     letter-spacing:6px;
-    animation:zoomFade 2s ease forwards;
+    animation:fadeZoom 1.8s ease forwards;
     z-index:10;
 }
-@keyframes zoomFade{
-    0%{transform:scale(0.6);opacity:0}
-    50%{transform:scale(1.1);opacity:1}
-    100%{transform:scale(1);opacity:0}
+@keyframes fadeZoom{
+    0%{opacity:0;transform:scale(.8)}
+    40%{opacity:1;transform:scale(1.05)}
+    100%{opacity:0}
 }
 
-#app{
-    display:none;
-    height:100vh;
-    overflow:auto;
-}
+#app{display:none;height:100vh;overflow:auto}
 
-/* LAYOUT */
 header{
     text-align:center;
     padding:14px;
@@ -59,7 +49,7 @@ header{
 }
 
 .card{
-    background:#151521;
+    background:#141421;
     border-radius:14px;
     padding:16px;
     margin-bottom:14px;
@@ -76,7 +66,7 @@ input,button{
 }
 
 input{
-    background:#0f0f18;
+    background:#0e0e18;
     color:#fff;
 }
 
@@ -85,25 +75,17 @@ button{
     color:#fff;
     font-weight:600;
 }
-
 button.secondary{
     background:linear-gradient(90deg,#0077ff,#00e0ff);
 }
-
-button.danger{
-    background:#ff0033;
-}
+button.danger{background:#ff0033}
 
 .chat{
     height:240px;
     overflow-y:auto;
-    background:#0f0f18;
+    background:#0e0e18;
     border-radius:10px;
     padding:10px;
-}
-
-.chat div{
-    margin-bottom:6px;
 }
 
 video{
@@ -147,21 +129,21 @@ footer{
 </div>
 
 <!-- CHAT -->
-<div class="card" id="chatCard" style="display:none;">
+<div class="card" id="chatCard" style="display:none">
     <div class="chat" id="chat"></div>
     <input id="msg" placeholder="বার্তা লিখুন">
     <button onclick="sendMsg()">পাঠান</button>
 </div>
 
 <!-- CALL -->
-<div class="card" id="callCard" style="display:none;">
+<div class="card" id="callCard" style="display:none">
     <video id="myVideo" autoplay muted playsinline></video>
     <video id="remoteVideo" autoplay playsinline></video>
     <div class="controls">
         <button onclick="startCall()">ভিডিও কল</button>
         <button onclick="toggleMic()">মাইক</button>
         <button onclick="toggleCam()">ক্যামেরা</button>
-        <button class="danger" onclick="leave()">বেরিয়ে যান</button>
+        <button class="danger" onclick="leaveRoom()">বেরিয়ে যান</button>
     </div>
 </div>
 
@@ -175,12 +157,12 @@ footer{
 setTimeout(()=>{
     splash.style.display="none";
     app.style.display="block";
-},2000);
+},1800);
 
 /* STATE */
-let peer, conn, call;
-let localStream;
-let isCreator=false;
+let peer, conn=null, currentCall=null;
+let localStream=null;
+let isHost=false;
 
 /* LOG */
 function log(t){
@@ -188,97 +170,119 @@ function log(t){
     chat.scrollTop=chat.scrollHeight;
 }
 
+/* ENTER */
+function enter(){
+    login.style.display="none";
+    chatCard.style.display="block";
+    callCard.style.display="block";
+}
+
 /* CREATE */
 function createRoom(){
-    isCreator=true;
-    const r=roomCode.value.trim();
-    if(!username.value||!r)return alert("নাম ও কোড দিন");
+    if(!username.value||!roomCode.value) return alert("নাম ও কোড দিন");
+    isHost=true;
+    peer=new Peer(roomCode.value);
 
-    peer=new Peer(r);
+    peer.on("open",()=>{
+        enter();
+        log("🟢 রুম তৈরি হয়েছে");
+    });
 
-    peer.on("open",()=>enter("রুম তৈরি হয়েছে"));
-    peer.on("connection",c=>{conn=c;setupChat()});
-    peer.on("call",receiveCall);
+    peer.on("connection",c=>{
+        conn=c;
+        setupConnection();
+        alert("একজন ইউজার জয়েন করেছে");
+        log("🟡 একজন ইউজার জয়েন করেছে");
+    });
+
+    peer.on("call",handleCall);
 }
 
 /* JOIN */
 function joinRoom(){
-    isCreator=false;
-    const r=roomCode.value.trim();
-    if(!username.value||!r)return alert("নাম ও কোড দিন");
-
+    if(!username.value||!roomCode.value) return alert("নাম ও কোড দিন");
+    isHost=false;
     peer=new Peer();
+
     peer.on("open",()=>{
-        conn=peer.connect(r);
+        conn=peer.connect(roomCode.value);
         conn.on("open",()=>{
-            setupChat();
-            enter("রুমে জয়েন করা হয়েছে");
+            enter();
+            log("🟢 রুমে জয়েন করা হয়েছে");
         });
+        setupConnection();
     });
-    peer.on("call",receiveCall);
+
+    peer.on("call",handleCall);
 }
 
-/* ENTER */
-function enter(msg){
-    login.style.display="none";
-    chatCard.style.display="block";
-    callCard.style.display="block";
-    log("🟢 "+msg);
+/* CONNECTION */
+function setupConnection(){
+    if(!conn) return;
+
+    conn.on("data",d=>{
+        log(`<b>${d.name}:</b> ${d.msg}`);
+    });
+
+    conn.on("close",()=>{
+        if(isHost){
+            alert("একজন ইউজার রুম ছেড়ে গেছে");
+            log("🔴 একজন ইউজার রুম ছেড়ে গেছে");
+        }
+    });
 }
 
 /* CHAT */
-function setupChat(){
-    conn.on("data",d=>{
-        log("<b>"+d.name+":</b> "+d.msg);
-    });
-}
-
 function sendMsg(){
-    if(!conn||!msg.value)return;
+    if(!conn||!msg.value) return;
     conn.send({name:username.value,msg:msg.value});
-    log("<b>আমি:</b> "+msg.value);
+    log(`<b>আমি:</b> ${msg.value}`);
     msg.value="";
 }
 
 /* CALL RECEIVE */
-function receiveCall(c){
-    call=c;
+function handleCall(call){
+    if(currentCall) return;
+    currentCall=call;
+
     navigator.mediaDevices.getUserMedia({video:true,audio:true})
-    .then(s=>{
-        localStream=s;
-        myVideo.srcObject=s;
-        c.answer(s);
-        c.on("stream",r=>remoteVideo.srcObject=r);
+    .then(stream=>{
+        localStream=stream;
+        myVideo.srcObject=stream;
+        call.answer(stream);
+        call.on("stream",r=>remoteVideo.srcObject=r);
+        call.on("close",()=>currentCall=null);
     })
-    .catch(()=>alert("Camera/Mic blocked"));
+    .catch(()=>alert("Camera/Mic permission সমস্যা"));
 }
 
-/* CALL START */
+/* CALL START (ANYONE) */
 function startCall(){
-    if(isCreator)return alert("অন্য ইউজার কল শুরু করবে");
+    if(!conn||currentCall) return;
     navigator.mediaDevices.getUserMedia({video:true,audio:true})
-    .then(s=>{
-        localStream=s;
-        myVideo.srcObject=s;
-        call=peer.call(roomCode.value,s);
-        call.on("stream",r=>remoteVideo.srcObject=r);
+    .then(stream=>{
+        localStream=stream;
+        myVideo.srcObject=stream;
+        currentCall=peer.call(conn.peer,stream);
+        currentCall.on("stream",r=>remoteVideo.srcObject=r);
+        currentCall.on("close",()=>currentCall=null);
     })
-    .catch(()=>alert("Camera/Mic blocked"));
+    .catch(()=>alert("Camera/Mic permission সমস্যা"));
 }
 
 /* TOGGLES */
 function toggleMic(){
-    if(localStream)localStream.getAudioTracks()[0].enabled^=1;
+    if(localStream) localStream.getAudioTracks()[0].enabled^=1;
 }
 function toggleCam(){
-    if(localStream)localStream.getVideoTracks()[0].enabled^=1;
+    if(localStream) localStream.getVideoTracks()[0].enabled^=1;
 }
 
 /* LEAVE */
-function leave(){
-    if(call)call.close();
-    if(conn)conn.close();
-    if(peer)peer.destroy();
+function leaveRoom(){
+    if(currentCall) currentCall.close();
+    if(conn) conn.close();
+    if(peer) peer.destroy();
     location.reload();
 }
 </script>
