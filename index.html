@@ -2,215 +2,237 @@
 <html lang="bn">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>হ জ ব র ল - প্রো গেমিং চ্যাট</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>হ জ ব র ল - প্রো</title>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
     <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
     <style>
         :root {
+            --wa-dark: #0b141a;
+            --wa-green: #00a884;
             --gold: #FFD700;
             --clay: #8B4513;
-            --bg: #0a0a0a;
-            --card: #1a1a1a;
-            --accent: #ff0055;
         }
 
-        * { box-sizing: border-box; font-family: 'Segoe UI', 'Tahoma', sans-serif; }
-
-        body {
-            margin: 0; background-color: var(--bg); color: white;
-            height: 100vh; display: flex; justify-content: center; overflow: hidden;
+        body, html {
+            margin: 0; padding: 0; height: 100%;
+            font-family: 'Segoe UI', sans-serif;
+            background-color: var(--wa-dark); color: white;
         }
 
-        /* অ্যানিমেশন স্ক্রিন */
+        /* স্প্ল্যাশ স্ক্রিন */
         #splash {
-            position: fixed; inset: 0; background: black;
-            display: flex; justify-content: center; align-items: center; z-index: 100;
+            position: fixed; inset: 0; background: #000;
+            display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 1000;
         }
-        .blink {
-            font-size: 50px; font-weight: bold; color: var(--gold);
-            animation: pulse 1s infinite alternate;
-        }
-        @keyframes pulse { from { opacity: 1; transform: scale(1); } to { opacity: 0.3; transform: scale(1.1); } }
+        .logo { font-size: 50px; color: var(--gold); font-weight: bold; animation: glow 1.5s infinite; }
+        @keyframes glow { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
 
-        .app {
-            width: 100%; max-width: 500px; height: 100vh;
-            background: var(--card); display: flex; flex-direction: column;
-            border: 2px solid var(--clay);
+        /* লগইন কন্টেইনার */
+        #login-container {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            height: 100vh; padding: 20px; text-align: center;
         }
-
-        header {
-            background: linear-gradient(to bottom, var(--clay), #4d260b);
-            padding: 15px; text-align: center; color: var(--gold);
-            font-size: 24px; font-weight: bold; border-bottom: 2px solid var(--gold);
+        .input-group { width: 100%; max-width: 300px; margin-bottom: 15px; }
+        input { 
+            width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--clay);
+            background: #2a3942; color: white; outline: none;
         }
 
-        .screen { display: none; padding: 20px; flex-direction: column; height: 100%; }
-        .active { display: flex; }
+        /* মেইন অ্যাপ ইন্টারফেস */
+        #app-main { display: none; height: 100vh; grid-template-columns: 350px 1fr; }
 
-        /* লগইন ডিজাইন */
-        input {
-            background: #000; border: 1px solid var(--gold);
-            padding: 15px; color: white; margin-bottom: 15px; border-radius: 8px;
-        }
-        button {
-            padding: 15px; background: var(--gold); color: black;
-            border: none; border-radius: 8px; font-weight: bold; cursor: pointer;
-            text-transform: uppercase; transition: 0.2s;
-        }
-        button:active { transform: scale(0.95); }
+        /* সাইডবার (কন্টাক্ট লিস্ট) */
+        .sidebar { background: #111b21; border-right: 1px solid #2a3942; display: flex; flex-direction: column; }
+        .sidebar-header { background: #202c33; padding: 15px; display: flex; justify-content: space-between; align-items: center; color: var(--gold); }
+        .contact-list { overflow-y: auto; flex: 1; }
+        .contact-item { padding: 15px; border-bottom: 1px solid #222; cursor: pointer; display: flex; align-items: center; gap: 10px; }
+        .contact-item:hover { background: #2a3942; }
+        .avatar { width: 45px; height: 45px; background: var(--clay); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+
+        /* চ্যাট উইন্ডো */
+        .chat-window { display: flex; flex-direction: column; background: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); background-blend-mode: overlay; background-color: #0b141a; }
+        .chat-header { background: #202c33; padding: 10px 20px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #333; }
+        .chat-messages { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+        .msg { max-width: 70%; padding: 8px 15px; border-radius: 10px; font-size: 14px; }
+        .msg.sent { align-self: flex-end; background: #005c4b; }
+        .msg.received { align-self: flex-start; background: #202c33; }
 
         /* ভিডিও গ্রিড */
-        #video-grid {
-            display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
-            overflow-y: auto; flex-grow: 1; background: #000; padding: 10px;
-            border-radius: 10px; margin-bottom: 10px;
-        }
-        video {
-            width: 100%; aspect-ratio: 1/1; object-fit: cover;
-            border-radius: 8px; border: 1px solid #333;
-        }
+        #video-grid { display: none; position: absolute; inset: 0; background: #000; z-index: 500; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; padding: 10px; }
+        video { width: 100%; height: 100%; object-fit: cover; border-radius: 10px; background: #222; border: 2px solid var(--gold); }
 
-        /* চ্যাট এরিয়া */
-        #chat-box {
-            height: 120px; background: #111; border-radius: 8px;
-            padding: 10px; overflow-y: auto; font-size: 14px; margin-bottom: 10px;
-        }
+        /* কন্ট্রোল এরিয়া */
+        .input-area { background: #202c33; padding: 10px; display: flex; gap: 10px; align-items: center; }
+        .btn-round { background: var(--wa-green); border: none; width: 45px; height: 45px; border-radius: 50%; cursor: pointer; color: white; font-size: 20px; }
+        .call-btn { background: #34b7f1; }
+        .exit-btn { background: #ea0038; }
 
-        .controls {
-            display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
+        /* রেস্পন্সিভ মোবাইল */
+        @media (max-width: 768px) {
+            #app-main { grid-template-columns: 1fr; }
+            .sidebar { display: block; }
+            .chat-window { display: none; }
+            .active-chat .sidebar { display: none; }
+            .active-chat .chat-window { display: flex; }
         }
-        .btn-red { background: var(--accent); color: white; }
-
-        .footer { font-size: 11px; text-align: center; padding: 10px; color: #555; }
     </style>
 </head>
 <body>
 
-<div id="splash"><div class="blink">হ জ ব র ল</div></div>
+<div id="splash"><div class="logo">হ জ ব র ল</div><p style="color:var(--clay)">তৈরি করেছেন: বাবাই</p></div>
 
-<div class="app">
-    <header>হ জ ব র ল</header>
+<div id="login-container">
+    <h2 style="color:var(--gold)">লগইন (OTP)</h2>
+    <div id="recaptcha-container"></div>
+    <div class="input-group">
+        <input type="text" id="phone" placeholder="+88017xxxxxxxx">
+    </div>
+    <button onclick="sendOTP()" id="send-btn" style="padding:10px 30px; background:var(--wa-green); border:none; color:white; border-radius:5px; cursor:pointer;">OTP পাঠান</button>
+    
+    <div id="otp-group" style="display:none; margin-top:15px;">
+        <input type="text" id="otp" placeholder="৬ ডিজিট কোড দিন">
+        <button onclick="verifyOTP()" style="margin-top:10px; background:var(--gold); color:black; border:none; padding:10px 20px; border-radius:5px; font-weight:bold;">ভেরিফাই করুন</button>
+    </div>
+</div>
 
-    <div id="login-screen" class="screen active">
-        <p style="text-align:center; color:var(--gold);">মাল্টিপ্লেয়ার চ্যাট ও কল</p>
-        <input type="text" id="username" placeholder="আপনার নাম">
-        <input type="text" id="room-id" placeholder="সিক্রেট রুম কোড">
-        <button onclick="initApp()">জয়েন করুন</button>
-        <p style="font-size:12px; color:#777; margin-top:10px;">* একই কোড ব্যবহার করলে ১০ জন পর্যন্ত যুক্ত হতে পারবেন।</p>
+<div id="app-main">
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <span>হ জ ব র ল চ্যাট</span>
+            <button onclick="location.reload()" style="background:none; border:none; color:var(--gold); cursor:pointer;">Log out</button>
+        </div>
+        <div class="contact-list" id="contacts">
+            <div class="contact-item" onclick="openChat('Group Chat')">
+                <div class="avatar">G</div>
+                <div><strong>পাবলিক গ্রুপ</strong><br><small>সবাই এখানে যুক্ত আছে</small></div>
+            </div>
+        </div>
     </div>
 
-    <div id="main-screen" class="screen">
-        <div id="video-grid">
-            <video id="me" autoplay muted playsinline></video>
-        </div>
-        
-        <div id="chat-box"></div>
-        
-        <div style="display:flex; gap:5px; margin-bottom:10px;">
-            <input type="text" id="msg" placeholder="বার্তা..." style="flex:1; margin:0;">
-            <button onclick="sendMsg()" style="width:60px;">➔</button>
+    <div class="chat-window" id="chat-window">
+        <div class="chat-header">
+            <div style="display:flex; align-items:center; gap:10px;">
+                <div class="avatar" id="current-chat-avatar">G</div>
+                <strong id="current-chat-name">পাবলিক গ্রুপ</strong>
+            </div>
+            <div style="display:flex; gap:10px;">
+                <button class="btn-round call-btn" onclick="startVideoCall()">📞</button>
+                <button class="btn-round exit-btn" onclick="closeChat()">✖</button>
+            </div>
         </div>
 
-        <div class="controls">
-            <button onclick="muteMic()" id="mic-btn">🎙 মাইক</button>
-            <button onclick="muteCam()" id="cam-btn">📷 ক্যামেরা</button>
-            <button class="btn-red" onclick="location.reload()">লিভ</button>
+        <div class="chat-messages" id="messages">
+            <div class="msg received">স্বাগতম! "হ জ ব র ল" অ্যাপে চ্যাট শুরু করুন।</div>
         </div>
-        <div class="footer">তৈরি করেছেন: বাবাই | © ২০২৫</div>
+
+        <div class="input-area">
+            <input type="text" id="msg-input" placeholder="বার্তা লিখুন..." style="flex:1;">
+            <button class="btn-round" onclick="sendMessage()">➔</button>
+        </div>
+    </div>
+
+    <div id="video-grid">
+        <video id="local-video" autoplay muted playsinline></video>
+        <div style="position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 20px;">
+            <button class="btn-round exit-btn" onclick="endCall()" title="কল শেষ">📞</button>
+            <button class="btn-round" onclick="toggleMic()" style="background:#444">🎤</button>
+            <button class="btn-round" onclick="toggleCam()" style="background:#444">📷</button>
+        </div>
     </div>
 </div>
 
 <script>
-    // স্প্ল্যাশ স্ক্রিন রিমুভ
-    setTimeout(() => { document.getElementById('splash').remove(); }, 2500);
+    // Firebase Configuration (এখানে আপনার নিজের Firebase Credentials দিলে আসল OTP কাজ করবে)
+    const firebaseConfig = {
+        apiKey: "YOUR_API_KEY",
+        authDomain: "YOUR_PROJECT.firebaseapp.com",
+        projectId: "YOUR_PROJECT",
+        storageBucket: "YOUR_PROJECT.appspot.com",
+        messagingSenderId: "YOUR_ID",
+        appId: "YOUR_APP_ID"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
 
+    // স্প্ল্যাশ রিমুভ
+    setTimeout(() => document.getElementById('splash').style.display = 'none', 2500);
+
+    let confirmationResult;
     let myStream;
     let peer;
-    let roomCode;
-    let connections = {};
 
-    async function initApp() {
-        const name = document.getElementById('username').value;
-        roomCode = document.getElementById('room-id').value;
+    // ১. OTP ফাংশন
+    function sendOTP() {
+        const phone = document.getElementById('phone').value;
+        window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container');
+        auth.signInWithPhoneNumber(phone, window.recaptchaVerifier)
+            .then(result => {
+                confirmationResult = result;
+                document.getElementById('otp-group').style.display = 'block';
+                document.getElementById('send-btn').style.display = 'none';
+                alert("ওটিপি পাঠানো হয়েছে!");
+            }).catch(err => alert(err.message));
+    }
 
-        if (!name || !roomCode) return alert("দয়া করে নাম ও রুম কোড দিন!");
+    function verifyOTP() {
+        const code = document.getElementById('otp').value;
+        confirmationResult.confirm(code).then(() => {
+            document.getElementById('login-container').style.display = 'none';
+            document.getElementById('app-main').style.display = 'grid';
+            initPeer();
+        }).catch(() => alert("ভুল ওটিপি!"));
+    }
 
-        // ১. ক্যামেরা চালু
-        try {
-            myStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-            document.getElementById('me').srcObject = myStream;
-        } catch (e) {
-            alert("ক্যামেরা পারমিশন প্রয়োজন!"); return;
-        }
-
-        // ২. Peer আইডি তৈরি (রুমকোড-নাম কম্বিনেশন)
-        const myFullId = roomCode + "-" + name + "-" + Math.floor(Math.random()*999);
-        peer = new Peer(myFullId);
-
-        peer.on('open', (id) => {
-            document.getElementById('login-screen').classList.remove('active');
-            document.getElementById('main-screen').classList.add('active');
-            
-            // ৩. অটোমেটিক কানেক্ট লজিক: অন্যদের খোঁজা (সিম্পল প্রোটোকল)
-            // নোট: বাস্তব ১০ জনের জন্য সার্ভার লাগে, এখানে আমরা ইনকামিং কলের অপেক্ষায় থাকব
-            console.log("Joined as: " + id);
-        });
-
-        // ৪. কেউ কল করলে রিসিভ করা
+    // ২. PeerJS ও কলিং লজিক
+    function initPeer() {
+        peer = new Peer('user-' + Math.floor(Math.random()*10000));
         peer.on('call', call => {
+            document.getElementById('video-grid').style.display = 'grid';
             call.answer(myStream);
-            const v = document.createElement('video');
-            v.setAttribute('autoplay', '');
-            v.setAttribute('playsinline', '');
-            call.on('stream', remoteStream => {
-                v.srcObject = remoteStream;
-                if(!document.getElementById(call.peer)) {
-                    v.id = call.peer;
-                    document.getElementById('video-grid').append(v);
-                }
-            });
-        });
-
-        // ৫. চ্যাট কানেকশন রিসিভ
-        peer.on('connection', conn => {
-            conn.on('data', data => appendChat(data));
-            connections[conn.peer] = conn;
+            call.on('stream', userStream => addRemoteStream(userStream));
         });
     }
 
-    function sendMsg() {
-        const txt = document.getElementById('msg').value;
-        const name = document.getElementById('username').value;
-        if (!txt) return;
-
-        const fullMsg = name + ": " + txt;
-        appendChat("আপনি: " + txt);
-        
-        // সব কানেকশনে মেসেজ পাঠানো
-        Object.values(connections).forEach(conn => conn.send(fullMsg));
-        document.getElementById('msg').value = "";
+    async function startVideoCall() {
+        document.getElementById('video-grid').style.display = 'grid';
+        myStream = await navigator.mediaDevices.getUserMedia({video: true, audio: true});
+        document.getElementById('local-video').srcObject = myStream;
+        // এখানে গ্রুপের অন্যান্যদের অটো কল করার লজিক দেওয়া যায়
     }
 
-    function appendChat(m) {
-        const d = document.createElement('div');
-        d.innerText = m;
-        d.style.padding = "3px 0";
-        d.style.borderBottom = "1px solid #222";
-        const box = document.getElementById('chat-box');
-        box.appendChild(d);
-        box.scrollTop = box.scrollHeight;
+    function addRemoteStream(stream) {
+        const v = document.createElement('video');
+        v.srcObject = stream;
+        v.autoplay = true;
+        v.playsinline = true;
+        document.getElementById('video-grid').append(v);
     }
 
-    function muteMic() {
-        const active = myStream.getAudioTracks()[0].enabled;
-        myStream.getAudioTracks()[0].enabled = !active;
-        document.getElementById('mic-btn').innerText = !active ? "🎙 মাইক" : "🔇 মিউট";
+    // চ্যাট ফাংশন
+    function sendMessage() {
+        const input = document.getElementById('msg-input');
+        if(!input.value) return;
+        const msgDiv = document.createElement('div');
+        msgDiv.className = 'msg sent';
+        msgDiv.innerText = input.value;
+        document.getElementById('messages').appendChild(msgDiv);
+        input.value = '';
+        document.getElementById('messages').scrollTop = document.getElementById('messages').scrollHeight;
     }
 
-    function muteCam() {
-        const active = myStream.getVideoTracks()[0].enabled;
-        myStream.getVideoTracks()[0].enabled = !active;
-        document.getElementById('cam-btn').innerText = !active ? "📷 ক্যামেরা" : "🚫 অফ";
+    function endCall() {
+        location.reload();
+    }
+
+    function openChat(name) {
+        document.body.classList.add('active-chat');
+        document.getElementById('current-chat-name').innerText = name;
+    }
+
+    function closeChat() {
+        document.body.classList.remove('active-chat');
     }
 </script>
 
