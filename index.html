@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>হ জ ব র ল</title>
 <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
-
 <style>
+    *{box-sizing:border-box}
 body{margin:0;font-family:system-ui;background:#0b0b12;color:#fff}
 header{text-align:center;padding:14px;font-size:22px;font-weight:700;
 background:linear-gradient(90deg,#ff004c,#ff7b00)}
@@ -58,7 +58,6 @@ align-items:center;justify-content:center}
 
 </div>
 
-<!-- Incoming Call -->
 <div id="incoming">
 <div class="box">
 <div id="callerText"></div>
@@ -72,7 +71,6 @@ let peer,conn,call,pendingCall,localStream;
 let myName="",peerName="",isHost=false;
 
 function log(t){chat.innerHTML+=`<div>${t}</div>`;chat.scrollTop=chat.scrollHeight}
-
 function enter(){
 login.style.display="none";
 chatCard.style.display="block";
@@ -80,12 +78,18 @@ callCard.style.display="block";
 }
 
 function createRoom(){
-if(!username.value||!roomCode.value)return alert("নাম ও কোড দিন");
-myName=username.value;isHost=true;
-peer=new Peer(roomCode.value);
+myName=username.value; isHost=true;
+peer=new Peer(roomCode.value,{
+config:{
+iceServers:[
+{urls:"stun:stun.l.google.com:19302"},
+{urls:"stun:stun1.l.google.com:19302"}
+]
+}
+});
 peer.on("open",()=>{enter();log("🟢 রুম তৈরি হয়েছে")});
 peer.on("connection",c=>{
-conn=c;peerName=c.metadata?.name||"একজন ইউজার";
+conn=c; peerName=c.metadata?.name||"একজন ইউজার";
 alert(peerName+" রুমে জয়েন করেছে");
 log("🟡 "+peerName+" রুমে জয়েন করেছে");
 setupConn();
@@ -94,9 +98,15 @@ peer.on("call",incomingCall);
 }
 
 function joinRoom(){
-if(!username.value||!roomCode.value)return alert("নাম ও কোড দিন");
 myName=username.value;
-peer=new Peer();
+peer=new Peer({
+config:{
+iceServers:[
+{urls:"stun:stun.l.google.com:19302"},
+{urls:"stun:stun1.l.google.com:19302"}
+]
+}
+});
 peer.on("open",()=>{
 conn=peer.connect(roomCode.value,{metadata:{name:myName}});
 conn.on("open",()=>{enter();log("🟢 রুমে জয়েন করা হয়েছে")});
@@ -115,10 +125,8 @@ log("🔴 "+peerName+" রুম ছেড়ে গেছে");
 }
 
 function sendMsg(){
-if(!conn||!msg.value)return;
 conn.send({name:myName,msg:msg.value});
-log("<b>আমি:</b> "+msg.value);
-msg.value="";
+log("<b>আমি:</b> "+msg.value); msg.value="";
 }
 
 function incomingCall(c){
@@ -135,40 +143,28 @@ localStream=s;
 myVideo.srcObject=s;
 pendingCall.answer(s);
 pendingCall.on("stream",r=>remoteVideo.srcObject=r);
-call=pendingCall;
-pendingCall=null;
-})
-.catch(e=>alert("Permission denied\n"+e.name));
+call=pendingCall; pendingCall=null;
+});
 }
 
-function rejectCall(){
-pendingCall.close();
-pendingCall=null;
-incoming.style.display="none";
-}
-
+function rejectCall(){pendingCall.close();pendingCall=null;incoming.style.display="none"}
 function startCall(){
-if(call||!conn)return;
 navigator.mediaDevices.getUserMedia({video:true,audio:true})
 .then(s=>{
 localStream=s;
 myVideo.srcObject=s;
 call=peer.call(conn.peer,s);
 call.on("stream",r=>remoteVideo.srcObject=r);
-})
-.catch(e=>alert("Permission denied\n"+e.name));
+});
 }
-
-function toggleMic(){if(localStream)localStream.getAudioTracks()[0].enabled^=1}
-function toggleCam(){if(localStream)localStream.getVideoTracks()[0].enabled^=1}
-function leaveRoom(){
-if(call)call.close();
-if(conn)conn.close();
-if(peer)peer.destroy();
-location.reload();
-}
+function toggleMic(){localStream.getAudioTracks()[0].enabled^=1}
+function toggleCam(){localStream.getVideoTracks()[0].enabled^=1}
+function leaveRoom(){location.reload()}
 </script>
 
-<footer style="text-align:center;opacity:.6;padding:10px">© 2025 হ জ ব র ল | বাবাই</footer>
+<footer style="text-align:center;opacity:.6;padding:10px">
+© 2025 হ জ ব র ল | বাবাই
+</footer>
+
 </body>
 </html>
