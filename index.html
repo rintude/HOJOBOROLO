@@ -134,6 +134,7 @@ footer {
 <video id="peerVideo" autoplay playsinline></video>
 
 
+
     <div class="controls">
         <button onclick="startCall()">ভিডিও কল</button>
         <button onclick="toggleMic()">মাইক অন/অফ</button>
@@ -149,6 +150,8 @@ footer {
 </footer>
 
 <script>
+    let currentCall = null;
+
 let peer;
 let conn;
 let localStream;
@@ -232,44 +235,63 @@ function addMsg(user, text) {
 
 function handleCalls() {
     peer.on("call", call => {
-    navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+    currentCall = call;
+
+    navigator.mediaDevices.getUserMedia({
+        video: true,
+        audio: true
+    })
     .then(stream => {
         localStream = stream;
         myVideo.srcObject = stream;
+        myVideo.play();
+
         call.answer(stream);
-        call.on("stream", remote => {
-            peerVideo.srcObject = remote;
+
+        call.on("stream", remoteStream => {
+            peerVideo.srcObject = remoteStream;
+            peerVideo.play();
         });
+    })
+    .catch(err => {
+        console.error("Incoming call media error:", err);
     });
 });
 
+
 }
 
-
-    function startCall() {
+function startCall() {
     if (!peer || !conn) {
-        alert("কোনো ইউজার যুক্ত নেই");
+        alert("অন্য ইউজার যুক্ত নেই");
         return;
     }
 
-    navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+    navigator.mediaDevices.getUserMedia({
+        video: true,
+        audio: true
+    })
     .then(stream => {
         localStream = stream;
         myVideo.srcObject = stream;
+        myVideo.play();
 
-        // 👉 শুধু জয়েন করা ইউজার কল করবে
+        // 👉 শুধু joiner কল করবে
         if (peer.id !== room.value) {
-            const call = peer.call(room.value, stream);
-            call.on("stream", remote => {
-                peerVideo.srcObject = remote;
+            currentCall = peer.call(room.value, stream);
+
+            currentCall.on("stream", remoteStream => {
+                peerVideo.srcObject = remoteStream;
+                peerVideo.play();
             });
         }
     })
     .catch(err => {
+        console.error("Outgoing call media error:", err);
         alert("ক্যামেরা বা মাইকে সমস্যা হচ্ছে");
-        console.error(err);
     });
 }
+
 
 
 
