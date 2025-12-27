@@ -4,105 +4,55 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>হ জ ব র ল</title>
-
 <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
-
 <style>
-body{
-  margin:0;
-  font-family:system-ui,sans-serif;
-  background:#0b0b12;
-  color:#fff;
-}
-header{
-  text-align:center;
-  padding:14px;
-  font-size:22px;
-  font-weight:700;
-  background:linear-gradient(90deg,#ff004c,#ff7b00);
-}
-.container{max-width:900px;margin:auto;padding:12px}
-.card{
-  background:#151521;
-  border-radius:14px;
-  padding:16px;
-  margin-bottom:14px;
-}
-input,button{
-  width:100%;
-  padding:12px;
-  margin-top:10px;
-  border-radius:10px;
-  border:none;
-  font-size:16px;
-}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,sans-serif;background:#0b0b12;color:#fff}
+header{padding:15px;text-align:center;font-size:24px;font-weight:700;background:linear-gradient(90deg,#ff004c,#ff7b00)}
+.container{max-width:900px;margin:auto;padding:15px}
+.card{background:#151521;border-radius:14px;padding:16px;margin-bottom:16px}
+input,button{width:100%;padding:12px;margin-top:10px;border-radius:10px;border:none;font-size:16px}
 input{background:#0f0f18;color:#fff}
-button{
-  background:linear-gradient(90deg,#ff004c,#ff7b00);
-  color:#fff;font-weight:600;
-}
-button.secondary{
-  background:linear-gradient(90deg,#0077ff,#00e0ff);
-}
+button{background:linear-gradient(90deg,#ff004c,#ff7b00);color:#fff;font-weight:600;cursor:pointer}
+button.secondary{background:linear-gradient(90deg,#0077ff,#00e0ff)}
 button.danger{background:#ff0033}
-.chat{
-  height:220px;
-  overflow-y:auto;
-  background:#0f0f18;
-  border-radius:10px;
-  padding:10px;
-}
-video{
-  width:100%;
-  max-height:220px;
-  background:#000;
-  border-radius:12px;
-  margin-top:10px;
-}
-.controls{
-  display:flex;
-  gap:10px;
-  flex-wrap:wrap;
-}
-footer{
-  text-align:center;
-  font-size:12px;
-  opacity:.6;
-  padding:10px;
-}
+.chat{height:200px;overflow-y:auto;background:#0f0f18;border-radius:10px;padding:10px;margin-bottom:10px}
+video{width:100%;max-height:220px;background:#000;border-radius:12px;margin-top:10px}
+.controls{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+@media(max-width:600px){.controls{flex-direction:column}}
+footer{text-align:center;font-size:12px;opacity:.6;padding:10px}
 </style>
 </head>
-
 <body>
 
 <header>হ জ ব র ল</header>
 
 <div class="container">
 
-<!-- LOGIN -->
+<!-- LOGIN CARD -->
 <div class="card" id="login">
-  <input id="username" placeholder="আপনার নাম">
-  <input id="roomCode" placeholder="সিক্রেট কোড">
-  <button onclick="createRoom()">রুম তৈরি করুন</button>
-  <button class="secondary" onclick="joinRoom()">রুমে জয়েন করুন</button>
+<input id="username" placeholder="আপনার নাম">
+<input id="roomCode" placeholder="সিক্রেট কোড">
+<button onclick="createRoom()">রুম তৈরি করুন</button>
+<button class="secondary" onclick="joinRoom()">রুমে জয়েন করুন</button>
 </div>
 
-<!-- CHAT -->
+<!-- CHAT CARD -->
 <div class="card" id="chatCard" style="display:none">
-  <div class="chat" id="chat"></div>
-  <input id="msg" placeholder="বার্তা লিখুন">
-  <button onclick="sendMsg()">পাঠান</button>
+<div class="chat" id="chat"></div>
+<input id="msg" placeholder="বার্তা লিখুন">
+<button onclick="sendMsg()">পাঠান</button>
 </div>
 
-<!-- VIDEO -->
+<!-- VIDEO CARD -->
 <div class="card" id="callCard" style="display:none">
-  <video id="myVideo" autoplay muted playsinline></video>
-  <video id="remoteVideo" autoplay playsinline></video>
-  <div class="controls">
-    <button onclick="toggleMic()">মাইক</button>
-    <button onclick="toggleCam()">ক্যামেরা</button>
-    <button class="danger" onclick="leaveRoom()">বেরিয়ে যান</button>
-  </div>
+<video id="myVideo" autoplay muted playsinline></video>
+<video id="remoteVideo" autoplay playsinline></video>
+<div class="controls">
+<button onclick="toggleMic()">মাইক</button>
+<button onclick="toggleCam()">ক্যামেরা</button>
+<button class="danger" onclick="leaveRoom()">বেরিয়ে যান</button>
+</div>
 </div>
 
 </div>
@@ -110,57 +60,38 @@ footer{
 <footer>© 2025 হ জ ব র ল | বাবাই</footer>
 
 <script>
-let peer, conn, call;
+let peer,conn,call;
 let localStream;
-let myName="", peerName="";
+let myName="",peerName="";
 let isHost=false;
 
-/* Utility */
-function log(t){
-  chat.innerHTML += `<div>${t}</div>`;
-  chat.scrollTop = chat.scrollHeight;
+function log(t){chat.innerHTML+=`<div>${t}</div>`;chat.scrollTop=chat.scrollHeight}
+
+async function initMedia(){
+  if(localStream) return;
+  localStream = await navigator.mediaDevices.getUserMedia({video:true,audio:true});
+  myVideo.srcObject = localStream;
 }
 
-/* Enter Room */
 function enterUI(){
   login.style.display="none";
   chatCard.style.display="block";
   callCard.style.display="block";
 }
 
-/* Media */
-async function initMedia(){
-  if(localStream) return;
-  localStream = await navigator.mediaDevices.getUserMedia({
-    video:true,
-    audio:true
-  });
-  myVideo.srcObject = localStream;
-}
-
-/* Create */
 async function createRoom(){
-  if(!username.value || !roomCode.value){
-    alert("নাম ও কোড দিন"); return;
-  }
-  myName = username.value;
-  isHost = true;
-
+  if(!username.value || !roomCode.value){alert("নাম ও কোড দিন"); return;}
+  myName = username.value; isHost = true;
   await initMedia();
 
   peer = new Peer(roomCode.value,{
-    config:{
-      iceServers:[
-        {urls:"stun:stun.l.google.com:19302"},
-        {urls:"stun:stun1.l.google.com:19302"}
-      ]
-    }
+    config:{iceServers:[
+      {urls:"stun:stun.l.google.com:19302"},
+      {urls:"stun:stun1.l.google.com:19302"}
+    ]}
   });
 
-  peer.on("open",()=>{
-    enterUI();
-    log("🟢 রুম তৈরি হয়েছে");
-  });
+  peer.on("open",()=>{enterUI(); log("🟢 রুম তৈরি হয়েছে")});
 
   peer.on("connection",c=>{
     conn = c;
@@ -168,60 +99,42 @@ async function createRoom(){
     alert(peerName+" রুমে জয়েন করেছে");
     log("🟡 "+peerName+" রুমে জয়েন করেছে");
     setupConn();
-
-    // AUTO CALL
     call = peer.call(conn.peer, localStream);
-    call.on("stream", s => remoteVideo.srcObject = s);
+    call.on("stream", s=>remoteVideo.srcObject = s);
   });
 
   peer.on("call",c=>{
     call = c;
     c.answer(localStream);
-    c.on("stream", s => remoteVideo.srcObject = s);
+    c.on("stream", s=>remoteVideo.srcObject = s);
   });
 }
 
-/* Join */
 async function joinRoom(){
-  if(!username.value || !roomCode.value){
-    alert("নাম ও কোড দিন"); return;
-  }
+  if(!username.value || !roomCode.value){alert("নাম ও কোড দিন"); return;}
   myName = username.value;
-
   await initMedia();
 
-  peer = new Peer({
-    config:{
-      iceServers:[
-        {urls:"stun:stun.l.google.com:19302"},
-        {urls:"stun:stun1.l.google.com:19302"}
-      ]
-    }
-  });
+  peer = new Peer({config:{iceServers:[
+    {urls:"stun:stun.l.google.com:19302"},
+    {urls:"stun:stun1.l.google.com:19302"}
+  ]}});
 
   peer.on("open",()=>{
-    conn = peer.connect(roomCode.value,{
-      metadata:{name:myName}
-    });
-    conn.on("open",()=>{
-      enterUI();
-      log("🟢 রুমে জয়েন করা হয়েছে");
-    });
+    conn = peer.connect(roomCode.value,{metadata:{name:myName}});
+    conn.on("open",()=>{enterUI(); log("🟢 রুমে জয়েন করা হয়েছে")});
     setupConn();
   });
 
   peer.on("call",c=>{
     call = c;
     c.answer(localStream);
-    c.on("stream", s => remoteVideo.srcObject = s);
+    c.on("stream", s=>remoteVideo.srcObject = s);
   });
 }
 
-/* Connection */
 function setupConn(){
-  conn.on("data",d=>{
-    log(`<b>${d.name}:</b> ${d.msg}`);
-  });
+  conn.on("data",d=>log(`<b>${d.name}:</b> ${d.msg}`));
   conn.on("close",()=>{
     if(isHost){
       alert(peerName+" রুম ছেড়ে গেছে");
@@ -230,31 +143,15 @@ function setupConn(){
   });
 }
 
-/* Chat */
 function sendMsg(){
   if(!conn || !msg.value) return;
   conn.send({name:myName,msg:msg.value});
-  log("<b>আমি:</b> "+msg.value);
-  msg.value="";
+  log("<b>আমি:</b> "+msg.value); msg.value="";
 }
 
-/* Toggles */
-function toggleMic(){
-  if(localStream)
-    localStream.getAudioTracks()[0].enabled ^= true;
-}
-function toggleCam(){
-  if(localStream)
-    localStream.getVideoTracks()[0].enabled ^= true;
-}
-
-/* Leave */
-function leaveRoom(){
-  if(call) call.close();
-  if(conn) conn.close();
-  if(peer) peer.destroy();
-  location.reload();
-}
+function toggleMic(){if(localStream)localStream.getAudioTracks()[0].enabled^=1}
+function toggleCam(){if(localStream)localStream.getVideoTracks()[0].enabled^=1}
+function leaveRoom(){if(call)call.close(); if(conn)conn.close(); if(peer)peer.destroy(); location.reload()}
 </script>
 
 </body>
